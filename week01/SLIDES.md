@@ -168,6 +168,7 @@ Contains the syllabus, schedule, assignments, etc.
 - The majority of lectures will be asynchronous.
 - The beginning of each class will be devoted to answering questions, clarifying content, or discussions.
 - The later part of classes will be interactive, sometimes with some deliverable expected by the end that will make up part of the participation portion of your grade.
+- Starting week 7 (or 8?) we will be doing an in-class project -- building a property tax review platform around City of Philadelphia data
 
 <!--
   - **The majority of lectures will be async**
@@ -183,12 +184,18 @@ Contains the syllabus, schedule, assignments, etc.
     Some of the material will merit discussion -- when I anticipate this I'll try to call it out in the video.
   
   - **The later part of classes will be interactive...**
+
+  - **Starting week 7 (or 8?) ...**
+
+    I'll share more about that project when the time comes, but that project will be largely if not entirely in-class, as you'll be doing it in parallel with your final projects and I don't want it to get in the way. But just anticipate that it will be very important to be in attendance.
 -->
 ---
 
 ## Books
 
-There will occasionally be readings from the following books to provide more depth on certain core topics. Both are available from [O'Reilly for Higher Education](http://pwp.library.upenn.edu.proxy.library.upenn.edu/loggedin/pwp/pw-oreilly.html):
+There will occasionally be readings from the following books to provide more depth on certain core topics. All are available from [O'Reilly for Higher Education](http://pwp.library.upenn.edu.proxy.library.upenn.edu/loggedin/pwp/pw-oreilly.html):
+  - _Learning SQL, 3rd Edition_ by Alan Beaulieu
+  - _SQL Cookbook, 2nd Edition_ by Anthony Molinaro
   - _Data Pipelines Pocket Reference_ by James Densmore
   - _Designing Data-Intensive Applications_ by Martin Kleppmann
 

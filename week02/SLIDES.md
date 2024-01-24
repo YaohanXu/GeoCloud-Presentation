@@ -38,7 +38,7 @@ Let's talk about them. https://docs.google.com/presentation/d/1v-nMrK1-xhoOSA4Eu
 
 ... can be a chore.
 
-<!-- I want to talk about querying data with SQL, but before doing that we need some data to query, so we're going to talk about loading data into a database first, so that you can follow along. -->
+<!-- Now that we have a notion of what we're working with when we're working with a database, I want to talk about querying data with SQL. But before doing that we need some data to query, so we're going to talk about loading data into a database first, so that you can follow along. -->
 
 <!-- You would think it would be pretty painless, as the main reason for PostgreSQL and PostGIS to exist is to operate on stored data. However, loading data (geospatial or otherwise) can be a fairly technical and manual endeavor. -->
 
@@ -50,6 +50,15 @@ Let's talk about them. https://docs.google.com/presentation/d/1v-nMrK1-xhoOSA4Eu
 2.  Write `CREATE TABLE` SQL statement
 3.  Write `COPY` SQL statement
 
+<!-- When you're thinking about loading data into PostgreSQL, the tools or libraries that you use are generally going to be different depending on where your data falls among two broad types: (1) tabular data or (2) geospatial data. When I say tabular data I'm usually referring to data in CSV files, but some of these tools (especially if you're talking about R or Pandas in Python) will also work with things like excel files, parquet files, or dataframes without geospatial information. -->
+
+<!-- So how do we load tabular data? There are a few ways. The first way is using a `COPY` SQL statement. Generally speaking, this entails three steps:
+1. inspecting the data attributes,
+2. creating the table in your database (e.g. with a `CREATE TABLE` SQL statement), and
+3. transfering the data into the table using a `COPY` command. 
+
+Let's try it out. -->
+
 ---
 
 ### 1. Inspect the header and first few rows
@@ -58,7 +67,13 @@ https://www.rideindego.com/wp-content/uploads/2022/12/indego-stations-2022-10-01
 
 Sometimes you may notice that some preliminary cleaning or correction must be done (as is the case with the above file).
 
-<!-- This file has a few columns, and then a bunch of blank columns, on of which has a single value down below. I just want to use the first four columns of this file. There are a number of ways that you can deal with a file like this; I used a package called csvkit. -->
+<!-- 
+
+Let's try this using some data from the Indego bike share system. I've linked to a CSV file here. If you're following along in the slides, go ahead and download this file now.
+
+When we open up this CSV file and inspect it (and you can do that with Excel or Google Sheets or Pandas, or just in VS Code -- I use an extension called Rainbow CSV to color-code the columns of CSV files) ... when I inspect it, I can see that this file has a few columns, and then a bunch of blank columns, on of which has a single value down below. I just want to use the first four columns of this file. There are a number of ways that you can deal with a file like this; I used a package called csvkit. 
+
+-->
 
 ---
 
