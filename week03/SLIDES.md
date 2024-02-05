@@ -14,141 +14,284 @@ style: |
   }
 ---
 
-# Data types, Aggregations, Geospatial Operations, and Joins
+# Geospatial Operations, CTEs, and Joins
 
 ---
 
 ## Agenda
 
-- Data types
+- More Data types
   - Functions and operators
   - Dates
   - Spatial types
 - Spatial operations
+- Common Table Expressions
 - Joins
+- Spatial aggregations
+
+<!--
+
+In the last lecture we started talking about data types. We're going to see some common operations on a few of those data types this time, and we're going to throw spatial data types into the mix, and we'll spend a significant chunk of time talking about the various types of spatial operations you can do with PostGIS. Then we'll talk about using multiple relations in our queries with common table expressions and joins, and we'll finish off with a demonstration that incorporates a number of these concepts.
+
+When there's SQL being run on-screen, I encourage you to follow along on your own computer. If I choose one tool or another to demonstrate with, I'll try to give my reasoning for my choice of tool, but remember that there is not going to be a single right way to do most of the stuff we'll be getting into.
+
+-->
 
 ---
 
-## PostgreSQL Data Types, a sampling
+# Core Data Type Operations
 
-| Data Type | Example |
-|---|---|
-| Boolean | `true`, `false`, `null` |
-| Numbers | `1`, `3.1415`, `-1.2e-7`, `null` |
-| Text | `‘Musa’`, `‘a’`, `‘1234’`, `null` |
-| Date/time (timestamp/time with/without time zone, date, interval) | `‘2020-09-08’::date` <br> `to_timestamp(1599572175)` <br> `Interval ‘4 days 3 hours 13 seconds’` |
-| Money | `$10`, `¥10`, `€10`, `null` |
-| Arrays of any type | `[1, 2, 3, 4]`, `[‘banana’, ‘orange’, ‘apple’]`, `null` |
-| JSON (as JSONB) | `{‘a’: 1, ‘b’: 2, …}`, `null` |
+<!--
+
+In the last lecture we chatted about a few of the data types and the operations you can take on them, but I want to demonstrate a few that are less obvious on the face of them.
+
+-->
 
 ---
 
-## Each data types has functions and operators
+I'll create a new database for any examples I do in this lecture.
 
-- Boolean - `AND`, `OR`
-- Numbers (integers, floating point numbers) - `+`, `-`, `AVG`, `SUM`, `CORR`
-- Text - `STRING_AGG`, `||` (concatenate), `LIKE`, substrings, etc.
-- Date/time - `-` (intervals), `EXTRACT` date parts, timezone conversion
+<!--
 
----
+I would either choose to create the database in PG Admin, or I would use the `createdb` command which is a command line program that's installed with PostgreSQL. As you have experienced already with other command line tools, it may be neccessary to set up your PATH environment variable to get it to work, but really it's not neccessary. I just prefer it sometimes so that I can stay in my code editor (VS Code). It's always useful to have CLI commands in my back pocket.
 
-## You can "cast" data between types
+By the way, the sudo command is something that I have to do to run this command as the postgres database's administrative user. The first password I entered is my own password, and the second is the postgres user's password.
 
-**cast** (_v._) - Convert a value from one data type to another.
+-->
 
-```sql
-SELECT CAST('121' AS integer);
+### In my terminal...
 
-SELECT CAST(121 AS text);
-
-SELECT CAST('SRID=4326;POINT(-75.16 39.95)' AS geometry);
+```bash
+createdb --port 5432 musa509week03
 ```
 
-<!-- Here some examples of casting data -- from text to integer, from integer to text, and from text to geometry. -->
+<!--
+
+And then, because I know I'll be doing spatial stuff today, I have to install the PostGIS extensions into the database. Remember this is something you have to do on each database, if you want to use the spatial extensions. I'll use the PostgreSQL extension in VS Code for this, again so that I can stay in my code editor.
+
+-->
+
+### In a database client...
+
+```sql
+create extension postgis
+```
 
 ---
 
-## Casting data (_PostgreSQL-specific syntax_)
+## Download some data
 
-**cast** (_v._) - Convert a value from one data type to another.
+<!--
 
-```sql
-SELECT '121'::integer;
+For these first few quick examples I'm going to load the Indego stations into this new database like we've done in the past. cURL is another command line program I use all the time for downloading data from a URL into a folder. Also not something you need to use neccessarily -- you'll find your rhythm and preferred tools over time.
 
-SELECT 121::text;
+-->
 
-SELECT 'SRID=4326;POINT(-75.16 39.95)'::geometry;
+```bash
+curl https://www.rideindego.com/wp-content/uploads/2024/01/indego-stations-2024-01-01.csv \
+  | csvcut --not-columns 4-8 \
+  > data/indego_stations.csv
 ```
 
-<!-- PostgreSQL also has a specific casting syntax using two consecutive colons. Each of these do exactly the same thing as the Cast operator above. I like the colon syntax, however it's worth noting that the "cast" syntax is easier to port to other databases, for cases where that matters. -->
+<!--
+
+In my terminal, I also used something called a "pipe", which is that vertical bar in the terminal command, to send or "pipe" the output from the curl command into the csvcut command. In other words, using the downloaded contents of the CSV file from Indego's website directly as the input for the csvcut command. And then I'm sending the output of the csvcut command to a new file in my data folder. That's what the right angle bracket does.
+
+-->
 
 ---
 
-## Working with `date` data
+## Load the data
 
-- Some of you may have run into problems reading the date columns in last week's exercises
-- Dates are ambiguous (e.g. `6/10/2016`)
-- It helps to be explicit when casting from `text` to `date`
+```sql
+create schema if not exists indego;
+create table if not exists indego.stations (
+    station_id   INTEGER,
+    station_name TEXT,
+    go_live_date TEXT
+)
+
+copy indego_stations
+from '...path to file goes here...'
+with (format csv, header true);
+
+alter table indego_stations
+alter column go_live_date type date
+    using to_date(go_live_date, 'MM/DD/YYYY');
+```
+
+<!--
+
+I'm also going to be taking advantage of schemas this time. I've talked with a few people about schemas in PostgreSQL, but you can think of them as folders -- organizational aides for your data within a database. I usually think of them as topics for my data. So, all the data relevant to an indego bikeshare topic I'll place in the "indego" schema.
+
+-->
 
 ---
 
-## Converting `text` to `date`
+<!--
 
-Try the following SQL:
+To place a table in a schema or refer to a table in a schema you can just put the schema name, then a dot, then the table name. We haven't done this with tables so far because PostgreSQL uses a default schema for databases. If you don't explicitly specify a schema, PostgreSQL will look in these default schemas for whatever table you're referring to. It's similar to the PATH environment variable in this way.
+
+-->
+
+If you want to see what the default schemas are you can query the [`search_path` variable](https://www.postgresql.org/docs/8.1/runtime-config-client.html#:~:text=search_path):
 
 ```sql
-SELECT '6/10/2016'::date;
+show search_path;
 ```
 
-Depending on what language/region your computer is configured for, this may:
-* Give the date value June 10, 2016
-* Give the date value October 6, 2016
-* Result in an error
+<!--
+
+That's the second time we've used the `SHOW` keyword. You can find other database settings that can be looked up with that command at the link in the slides. Note that the SHOW command is PostgreSQL-specific, and as such, the results show up best in PG Admin.
+
+-->
 
 ---
 
-## Converting `text` to `date`
+## Queries
 
-Try the following SQL:
+<!--
+
+We can do some simple queries with this data. Let's start off by looking at the whole table:
+
+-->
 
 ```sql
-SHOW DateStyle;
+select *
+from indego.stations;
 ```
 
-My setting is `ISO,MDY`. That's not right or wrong, it's just what's expected in a computer set to a US/English region and language.
+<!-- Just to demonstrate what we can do with numbers, let's consider just the IDs for a moment, ... -->
 
-`ISO` refers to [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) -- i.e. **`YYYY-MM-DD`**. Pretty much any DB will accept this. The other value (e.g. `MDY`) is specific to the "locale" (the region and language).
-
-<!-- I say region AND language because it's not just language. For example, for UK English, DMY is expected. -->
+```sql
+select station_id
+from indego.stations;
+```
 
 ---
 
-## Converting `text` to `date`
+### Next consecutive station ID
 
-To be safe, specify the expected date format if at all possible.
+<!-- ... and say we are assigning these IDs automatically and consecutively. If we wanted to get the ID of the station that was created after each station we might just add 1 to that station's ID. -->
+```sql
+select
+    station_id,
+    station_id + 1
+from indego.stations;
+```
+
+<!-- There are reasons that you might not want to do something like that (for instance you can see that the stations 3001 to 3004 don't exist), but we'll learn about the right way to do this later with WINDOW functions. -->
+
+### Station IDs over 3355
+
+<!-- Now let's say we only want to see information about stations that went live at the same time or later than the one with ID 3355. We could use a WHERE clause with a boolean condition to filter the resulting relation: -->
+```sql
+select *
+from indego.stations
+where station_id >= 3355;
+```
+
+---
+
+### Filtering with dates
+
+<!-- But we don't know if the station_id's are _truly_ consiecutive, so let's use the go_live_date value instead. Let's find the go_live_date for station 3355: -->
 
 ```sql
-SELECT to_date('6/10/2016', 'DD/MM/YYYY');
+select go_live_date
+from indego.stations
+where station_id = 3355;
+
+-- 2023-10-12
 ```
-The above will _always_ result in October 6, 2016. If you have a column named `my_date` on a table `my_table` and want to convert the whole column, you can:
+
+<!-- Then we can use that value to get the actual set of stations: -->
 
 ```sql
-ALTER TABLE my_table
-ALTER COLUMN my_date TYPE date
-    USING to_date(my_date, 'DD/MM/YYYY');
+select *
+from indego.stations
+where go_live_date >= '2023-10-12';
 ```
+
+<!-- Even though we use a string to specify the date, behind the scenes PostgreSQL will sneakily try to cast the value to the same type as the field it's comparing against. If you use a string that PostgreSQL doesn't know how to automatically convert then you'll get an error. -->
+
+---
+
+### Extracting date parts
+
+<!-- Let's say I wanted to know the month of the year that each station went live. We could use the EXTRACT function: -->
+```sql
+select
+    station_id,
+    station_name,
+    extract(month from go_live_date) as go_live_month
+from indego.stations;
+```
+
+We can also filter with `EXTRACT`.
+
+<!-- Say we want to see all stations that went live in the 4th quarter, we could use the EXTRACT function in the WHERE clause: -->
+
+```sql
+select
+    station_id,
+    station_name,
+    extract(month from go_live_date) as go_live_month
+from indego.stations
+where extract(quarter from go_live_date) = 4;
+```
+
+<!-- This would give us only stations that went live in oct, nov, or dec. -->
+
+---
+
+### Concatenating and filtering with text
+
+<!-- Finally let's see a couple things we can do with TEXT types in SQL. First of all, say we wanted to create a label for each station that included the station name and ID. We could use the string concatenation operator to do that. The concatenation operator is just two vertical bars (you can find the vertical bar above the backslash on your keyboard): -->
+
+```sql
+select
+    station_id,
+    'Name: ' || station_name || ', ID: ' || station_id
+        as station_label,
+    go_live_date
+from indego.stations;
+```
+
+<!-- We can also use the LIKE operator on strings when filtering. For example, we could get all the stations that mention Walnut St in their name: -->
+
+```sql
+select
+    station_id,
+    station_name,
+    go_live_date
+from indego.stations
+where station_name like '%Walnut%';
+```
+
+<!-- The percent sign is what's called a "wildcard" character. In this case it will match any number of any character in a string. So this SQL finds any station names that have any characters followed by the string "Walnut", followed by any other characters.
+
+There are tons of other functions and operators you can use on core data types, but let's move on to spatial types. -->
 
 ---
 
 ## Spatial data types
 
 The PostGIS extension to PostgreSQL adds two data types:
-- `geometry`
-- `geography`
+- `geometry` - Shapes on a plane
+- `geography` - Shapes on the surface of [a sphere](https://github.com/postgis/postgis/blob/fcdf1f229798936166f8b859d4aeb76a2cf5fc39/liblwgeom/liblwgeom.h.in#L137-L149)
+
+<!-- At a high level, the GEOMETRY type is used to represent shapes on a Cartesian plane, and the GEOGRAPHY type is used to represent shapes on the surface of a sphere with a radius that approximates the size of Earth. 
+
+By the way, as a fun side effect of PostGIS being open source, you can actually go and see the exact lines of code where the radius is defined. [SHOW IN THE BROWSER] -->
 
 ---
 
 ## `geometry` vs `geography`
+
+<!-- So why are both of these data types provided in PostgreSQL? It's because they may come in handy in different situations. Doing calculations on GEOMETRY values are almost always faster than using GEOGRAPHY values -- for example calculating the distance between two points on a plane only requires some multiplication and a square root, whereas on a sphere there are several relatively expensive trigonometric calculations involved. Speed of queries is something that, in practice, people rely on a database like PostgreSQL for. That's not as true in other databases we'll see later like BigQuery.
+
+On the other hand, you have to do additional accounting when using GEOMETRY values -- you have to ensure that values being compared are using the same coordinate reference system, and that the CRS is appropriate for your points, not creating too much distortion. With GEOGRAPHY values there's just less you have to keep track of. -->
 
 |   | Speed | Simplicity |
 | --- | --- | --- |
@@ -166,6 +309,8 @@ https://medium.com/coord/postgis-performance-showdown-geometry-vs-geography-ec99
 * If your data is geographically compact, use the `geometry` type with an [appropriate projection](http://epsg.io).
 * If you need to measure distance with a dataset that is geographically dispersed, use the `geography` type.
 
+They have a little mote detail in their [FAQ](https://postgis.net/documentation/faq/geometry-or-geography/).
+
 **My recommendation? ...**
 
 ---
@@ -176,22 +321,202 @@ https://medium.com/coord/postgis-performance-showdown-geometry-vs-geography-ec99
 
 **Use `geography`**
 
-<!-- Most of the data that you're going to put in the database is already going to be in degrees of longitude and latitude, and it's just a cognitive burden that you don't have to worry about. And if you need one of the functions that's only available for geometries, casting to `geometry` is pretty easy if you know the target SRID. -->
+<!-- 
+
+(https://postgis.net/documentation/faq/geometry-or-geography/#:~:text=The%20geometry%20type%20is%20easy%20to%20understand,%20and%20represents%20data%20on%20a%20cartesian%20plane.) 
+
+The PostGIS FAQ on geometry vs geography states: "The geometry type is easy to understand, and represents data on a cartesian plane."
+
+I think this is false (the first part). When I'm using geometries I have to keep more things in mind about my data. I have to pay attention wo when geometries work well as approximations and when they don't. I have to worry about the CRS between different geometry fields. That's not easier to understand for me than geographies.
+
+Most of the data that you're going to put in the database is already going to be in degrees of longitude and latitude, and it's just a cognitive burden that you don't have to worry about. And if you need one of the functions that's only available for geometries, casting to `geometry` is pretty easy if you know the target SRID.
+
+Ultimately, I agree with Jacob Baskin who, in his benchmark comparison between geometry and geography queries in PostGIS says:
+
+(https://medium.com/coord/postgis-performance-showdown-geometry-vs-geography-ec99967da4f0)
+
+> So, if I were starting a new project from scratch, I would use geography regardless of the performance penalty. Why? Remember that you should never optimize prematurely: unless your queries are slow already, or your database load is becoming problematic, it probably doesn’t make sense to try and speed up. And if performance isn’t an issue already, geography is much easier to manage and much harder to screw up.
+>
+> Once you have your data working with geography, you at least have a baseline: if you do decide to convert your data to geometry, you can at least compare results to ensure the inaccuracy you incur is acceptable. It also allows you to compare performance to understand how much time you are actually saving.
+
+-->
 
 </div>
 
 ...until you can't
 
-<!-- If you determine that your queries are too slow, and measuring spatial distance is a common operation, then you may be well served by converting to geometry. In those cases, you may want to note the difference explicitly. For example, you could have a `geog` column and a `geom_32129`.
+<!-- If you determine that your queries are too slow, and measuring spatial distance is a common operation, then you may be well served by converting to geometry (we'll see examples where this might be the case in next week's lecture and in assignment #2). In those cases, you may want to note the difference explicitly. For example, you could have a `geog` column and a `geom_32129` column for geometries in EPSG:32129.
 
-Generally, you should always allow simplicity to win (unless you _need_ the complexity). Do things simple way and switch to the complex way if it proves to be a bottleneck. -->
+Generally, with _all_ software development (and maybe as an overarching design rule everywhere), you should always allow simplicity to win (unless you _need_ the complexity). Do things simple way and switch to the complex way if it proves to be a bottleneck. -->
 
 </div>
 
 ---
 
+### Load stations geographic data for examples
+
+<!-- Let's quickly load the geographic data for the Indego stations so that we can compare the accuracy of GEOMETRY and GEOGRAPHY calculations. We can go back to the Indego data page and grab the URL for the station statuses dataset, which is a GeoJSON file that includes station locations.
+
+Now, to be entirely honest, I might normally choose to load this data through QGIS because I'm mainly interested in exploring it right now. However, QGIS will have trouble if you try to load this particular dataset into PostGIS through it. I think it's because of the bikes attribute, which is nested JSON, but I'm not 100% sure -- I didn't take too much time to debug it
+
+However, this is why it's useful to know more than one way to load data in. Ogr2ogr has no problem with this dataset. -->
+
+```bash
+curl -L http://www.rideindego.com/stations/json/ \
+> data/indego_stations.geojson
+
+ogr2ogr \
+-f "PostgreSQL" \
+-nln "stations_geo" \
+-lco "SCHEMA=indego" \
+-lco "GEOM_TYPE=geography" \
+-lco "GEOMETRY_NAME=geog" \
+-lco "OVERWRITE=yes" \
+PG:"host=localhost port=5434 dbname=musa509week03 user=postgres password=postgres" \
+"data/indego_stations.geojson"
+```
+
+<!-- Nevertheless, QGIS still might be useful for me to verify that my data looks right. If I have a connection to my database set up in QGIS, I can quickly add a layer from any table that has a geometry or geography field. Then, using QuickMapServices plugin, I can throw a basemap under the data, just to verify that the stations are in the right places. This might also be something I choose to use PG Admin for, but either way I'd need something outside of the VS Code PostgreSQL extension, which just shows me a textual representation of my shapes. -->
+
+---
+
+### Measuring distances
+
+Let's measure the distance from each of the stations to City Hall.
+
+<!--
+
+I'm going to use a set of coordinates for City Hall that I gathered before. Generally I use somewhere around longitude -75.16, latitude 39.95 for Philadelphia City Hall.
+
+Now since we loaded this data in with a GEOGRAPHY type, we can be pretty confident in the results.
+
+-->
+
+```sql
+select
+    id,
+    name,
+    st_distance(
+        geog,
+        st_makepoint(-75.1634, 39.9529)
+    ) as dist_geog
+from indego.stations_geo
+order by dist_geog;
+```
+
+<!-- We know now that doing these calculations on geometries is going to be faster, but what would we be trading off in terms of accuracy?
+
+With the way that we're working with this data right now (i.e. it's not a lot of data, and we're running a single distance query on each row, manually), we're not really going to notice a speed difference. Let's focus on the accuracy for now.-->
+
+---
+
+### Measuring distance with Web Mercator
+
+<!-- Let's try using CRS 3857 -- better knows as Web Mercator -- first. The vast majority of maps you look at online use this projection. If you go to Google Maps and zoom all the way out, you're looking at a world map projected into CRS 3857. This projection is nominally based on meters, and if you're very near the equator it's actually quite accurate. But as soon as you get away from the equator it starts to break down.
+
+Often when I intend to work with my data in a specific CRS for whatever reason, I'll create a new geometry column and explicitly name it with the reference system ID that I'm using. Otherwise I feel like I'm omitting the units. For example, if I create a "length" field and don't specify whether the numbers should be interpreted as meters or feet then how would someone know. Same with my geometries.
+-->
+
+```sql
+alter table indego.stations_geo
+    add column geom_3857 geometry;
+
+update indego.stations_geo set
+    geom_3857 = st_transform(geog::geometry, 3857),
+```
+
+<!-- When we cast a geography to a geometry, PostGIS knows it should be interpreted in CRS 4326, so we can use the st_transform function to project the geometry value from 4326 to 3857.
+
+Now that we have a new column with our data in web mercator we can calculate the distances between city hall and each station in that projection: -->
+
+```sql
+select
+    id,
+    name,
+    st_distance(
+        geog,
+        st_makepoint(-75.1634, 39.9529)
+    ) as dist_geog,
+    st_distance(
+        geom_3857,
+        st_transform(
+            st_setsrid(
+                st_makepoint(-75.1634, 39.9529), 
+                4326
+            ),
+            3857
+        )
+    ) as dist_3857
+from indego.stations_geo
+order by dist_geog;
+```
+
+<!-- When we created the point for city hall and calculated the distance from our geographies, we didn't need to specify the input spatial reference ID -- that's because PostGIS assumed that we were using a point with latitude and longitude, because that's always the case with geographies. With geometries though, PostGIS can't make such assumptions, so we have to use the ST_SetSRID function to tell the database that our city hall point is in 4326 coordinates.
+
+That's not enough though because PostGIS doesn't like doing calculations on geometries with differing SRIDs -- it wants you to explicitly choose which SRIDs you want to do the calculations in. This makes sense because, if you have a geometry in 4326 and on ein 3857 and you want to find the planar distance, those two coordinate reference systems specify different planes, so it matters which plane you're measuring the distance on.
+
+So, we have to transform our 4326 point into 3857, and then we can finally get a distance value.
+
+But look at the differences between these values! For the closest Indego station to City Hall -- and this one is actually ON city hall's apron, so _very_ close -- it's a 40 meter difference. And if we go down to the bottom of the list, the farthest station is just under 10 km from City hall, but we calculate over 13km in web mercator. That's more than a 30% error at Philadelphia's latitude. -->
+
+---
+
+### Measuring distance with a local projection
+
+<!-- Now let's try in a local projection. -->
+
+Let's use [PA State Plane South (meters)](https://epsg.io/32129) instead.
+
+<!-- I like using 32129 for Philadelphia data. A lot of data that you'll get from the city of Philadelphia or the state of PA might be in CRS 2272, which is the same as 32129 except it uses feet as it's unit of length. But we're going to use 32129. 
+
+This is going to look much the same as what we did for web mercator. -->
+
+```sql
+alter table indego.stations_geo
+    add column geom_32129 geometry;
+
+update indego.stations_geo set
+    geom_32129 = st_transform(geog::geometry, 32129),
+```
+
+```sql
+select
+    id,
+    name,
+    st_distance(
+        geog,
+        st_makepoint(-75.1634, 39.9529)
+    ) as dist_geog,
+    st_distance(
+        geom_32129,
+        st_transform(
+            st_setsrid(
+                st_makepoint(-75.1634, 39.9529), 
+                4326
+            ),
+            32129
+        )
+    ) as dist_32129
+from indego.stations_geo
+order by dist_geog;
+```
+
+<!-- When we get results on this Indego data with CRS 32129 you can see that the values are _very close_ to the geography distance values. Ultimately there's going to be some approximation that's going on when you go from a sphere to a plane, but even when we look at the farthest stations we're getting a difference of less than a tenth of a meter on a nearly 10 km distance.
+
+Projections matter. Data that you load in to your database won't always be in lat, lng, so stay vigilant about it, use the right data types, and name your columns in reasonable ways -->
+
+---
+
 # Spatial Operations
 https://postgis.net/docs/PostGIS_Special_Functions_Index.html#PostGIS_SQLMM_Functions
+
+<!-- Generally speaking the operations that you can do in PostGIS fall into five categories: -->
+
+* **Constructors** -- Create spatial data values
+* **Transformers** -- Generate new geometries from the input of one or more other geometries
+* **Accessors** -- Getting components of spatial values
+* **Predicates** -- Determine whether relationships between geometries are true or false
+* **Measures** -- Compute measurements with respect to one or more geometries
 
 ---
 
@@ -201,6 +526,7 @@ https://postgis.net/docs/PostGIS_Special_Functions_Index.html#PostGIS_SQLMM_Func
   [Well-known Text](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry)
 - Functions
   - `ST_GeomFromText`, `ST_GeomFromGeoJSON`
+  - `ST_GeogFromText` (oddly no `ST_GeogFromGeoJSON`)
   - `ST_MakePoint`, `ST_MakeLine`, etc. (e.g., on a table with only lat and lng)
 
 <!-- When you have a static value (like the location of Meyerson Hall) it may be easiest to use ST_GeomFromText. When you have a table of latitudes and longitudes, like the Indego trip history, ST_MakePoint may be best. -->
@@ -210,45 +536,90 @@ https://postgis.net/docs/PostGIS_Special_Functions_Index.html#PostGIS_SQLMM_Func
 ## _Transformers_: Generate new geometries from the input of one or more other geometries
 
 - `ST_Buffer`
-- `ST_ClosestPoint`
-- `ST_ConvexHull`
-- `ST_Difference`
+- `ST_ClosestPoint` (`GEOMETRY` only)
+- `ST_Difference` (`GEOMETRY` only)
 - `ST_Intersection`
-- `ST_Union`
+- `ST_Union` (`GEOMETRY` only)
 
 ---
 
 ## _Accessors_: Getting components of spatial values
 
-- `ST_X`
-- `ST_Y`
-- `ST_Endpoint`
-- `ST_Centroid`
+- `ST_X`/`ST_Y` (`GEOMETRY` only)
+- `ST_Endpoint` (`GEOMETRY` only)
+- `ST_Centroid`(`GEOMETRY` only)
 
 ---
 
 ## _Predicates_: Determine whether relationships between geometries are true or false
 
-- `ST_Contains`
+- `ST_Contains` (`GEOMETRY` only)
+- `ST_Covers`
 - `ST_Intersects`
-- `ST_Disjoint`
-- `ST_Equals`
+- `ST_Disjoint` (`GEOMETRY` only)
+- `ST_Equals` (`GEOMETRY` only)
 - `ST_DWithin`
 
 ---
 
 ## _Measures_: Compute measurements with respect to one or more geometries
 
-- `ST_Angle`
+- `ST_Angle` (`GEOMETRY` only)
 - `ST_Area`
-- `ST_Azimuth`
-- `ST_Perimiter`
+- `ST_Azimuth` (`GEOMETRY` only)
+- `ST_Perimiter` (`GEOMETRY` only)
 - `ST_Distance`
+
+---
+
+# Common Table Expressions
+
+<!-- A common table expression is a SQL structure that you can use to reduce duplication and increase readablility in your SQL code. A common table expression is basically a virtual table that you create within the context of just a single query. -->
+
+---
+
+<!-- Let's use our distance query as an example. Notice that we repeat the coordinates for city hall in the query. We also call st_makepoint on those coordinates multiple times. Here we can use a CTE to get rid of that duplication. 
+
+The table that defines our CTE just has a single row, and that row has a single field called geom. We can use a join (specifically a cross join in this case) to tell our final bottom query that it should pull data in from the CTE.
+
+Finally, we can run the query. The results will be the same as before, but our final query code is a little more readable. -->
+
+```sql
+with city_hall as (
+    select
+        st_setsrid(
+            st_makepoint(-75.1634, 39.9529),
+            4326
+        ) as geom
+)
+
+select
+    id,
+    name,
+
+    st_distance(
+        geog,
+        city_hall.geom
+    ) as dist_geo,
+
+    st_distance(
+        geom_32129,
+        st_transform(city_hall.geom, 32129)
+    ) as dist_32129
+
+from indego.stations_geo
+cross join city_hall
+order by dist_geo;
+```
 
 ---
 
 # Joins
 https://docs.google.com/presentation/d/1cygMG2NvRY6jalYG8rNPv6s8IqSVxEvii1cmhGKXDLU/edit?usp=sharing
+
+---
+
+# Exercise 1 -- Station Density
 
 ---
 
@@ -274,7 +645,13 @@ https://docs.google.com/presentation/d/1cygMG2NvRY6jalYG8rNPv6s8IqSVxEvii1cmhGKX
 
 ---
 
-## Tip 3: Use common table expressions to keep your queries readable*
+## Tip 3: Use comments liberally
+
+- SQL, especially when your queries get longer, is very information-dense; your future self will appreciate some context.
+
+---
+
+## Tip 4: Use common table expressions to keep your queries readable*
 
 <!-- Occasionally you'll have to use a query to calculate some intermediate step in your analysis. For those times you'll either use subqueries embedded directly in your query, or you'll use common table expressions.
 
