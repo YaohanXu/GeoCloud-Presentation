@@ -115,53 +115,6 @@ In PostgreSQL there are three general types of numbers. -->
 
 ---
 
-## Quick aside: It's because of binary
-
-<!-- Floating point errors happen because of how computers store numbers. -->
-
-- Computers* represent data in "bits" (binary digits, i.e. base-2 digits)
-
-<!-- The numbers we're used to writing are decimal numbers, or base-10 numbers. That just means they have 10 digits, 0 though 9. But computers use binary -- base-2. The digits are 0 and 1, because it's easy to represent two values (for example, low vs high voltage). -->
-
-- All integers (up to a certain maximum) can be exactly represented in a finite number of bits
-
-<!-- Representing numbers in binary isn't all that different from representing them in decimal. Take the number 135. To represent this in decimal repeatedly divide by 10 and place the remainder in the appropriate place.
-
-135 / 10 = 13 r 5 (in the ones column)
-13 / 10 = 1 r 3 (in the tens column)
-1 / 10 = 0 r 1 (in the hundreds column)
-
-Do the same with binary:
-
-135 / 2 = 67 r 1 (in the ones column)
-67 / 2 = 33 r 1 (in the twos column)
-33 / 2 = 16 r 1 (in the fours column)
-16 / 2 = 8 r 0 (in the eights column)
-8 / 2 = 4 r 0 (in the sixteens column)
-4 / 2 = 2 r 0 (in the thirtytwos column)
-2 / 2 = 1 r 0 (in the sixtyfours column)
-1 / 2 = 0 r 1 (in the 128s column)
-
-So you need 8 bits to represent the number 135. In fact, 8 bits can represent numbers up to 255. That's not very high, but most computers today use either 32 bit or 64 bit integers. You can represent plenty big numbers with 64 bits.
-
--->
-
-- Some real numbers _cannot_ be represented in a **finite** number of bits (just like in decimal, e.g. ⅔ is an _infinite_ repeating decimal)
-
-<!-- Some nnumbers are just two extreme though, esecially when you start talking about infinities. This is true in decimal too. In these cases, we have to approximate somehow. -->
-
-- In decimal (i.e., base-10 digits) we often choose some max number of digits (some "precision"), and round the number (e.g., `0.6666666667`)
-
-<!-- When you see floating point errors what you're seeing is the effects of these approximations -- for example, in binary, the value three-tenths (which can be represented as 0.3 in decimal) is an infinitely repeating value
-
-0.01001100110011... -->
-
-- Some neat tools:
-  - [Converting decimal to binary](https://www.rapidtables.com/convert/number/decimal-to-binary.html)
-  - [Exploring floating point representations](https://www.binaryconvert.com/result_float.html)
-
----
-
 ## More examples of numeric wackiness
 
 ```sql
@@ -186,6 +139,57 @@ Nope, it just means you should use the right tool for the job.
 
 - Similar to `geography` vs `geometry` -- float is faster, numeric is more "exact"
 - Some functions return float (e.g. spatial accessors like `ST_X`/`ST_Y`, or spatial measures like `ST_Area`)
+
+---
+
+## Quick aside: It's because of binary
+
+<!-- Floating point errors happen because of how computers store numbers. -->
+
+- Computers* represent data in "bits" (binary digits, i.e. base-2 digits)
+
+<!-- The numbers we're used to writing are decimal numbers, or base-10 numbers. That just means they have 10 digits, 0 though 9. But computers use binary -- base-2. The digits are 0 and 1, because it's easy to represent two values (for example, low vs high voltage). -->
+
+- Any integer can be exactly represented in a finite number of bits
+  - E.g. one-hundred-thirty-five in 135 in decimal or 1000111 in binary
+
+<!-- Representing numbers in binary isn't all that different from representing them in decimal. Take the number 135. To represent this in decimal repeatedly divide by 10 and place the remainder in the appropriate place.
+
+135 / 10 = 13 r 5 (in the ones column)
+13 / 10 = 1 r 3 (in the tens column)
+1 / 10 = 0 r 1 (in the hundreds column)
+
+Do the same with binary:
+
+135 / 2 = 67 r 1 (in the ones column)
+67 / 2 = 33 r 1 (in the twos column)
+33 / 2 = 16 r 1 (in the fours column)
+16 / 2 = 8 r 0 (in the eights column)
+8 / 2 = 4 r 0 (in the sixteens column)
+4 / 2 = 2 r 0 (in the thirtytwos column)
+2 / 2 = 1 r 0 (in the sixtyfours column)
+1 / 2 = 0 r 1 (in the 128s column)
+
+So you need 8 bits to represent the number 135. In fact, 8 bits can represent numbers up to 255. That's not very high, but most computers today use either 32 bit or 64 bit integers. You can represent plenty big numbers with 64 bits.
+
+-->
+
+- Some real numbers _cannot_ be exactly represented in a **finite** number of bits (just like in decimal, e.g. ⅔ is an _infinite_ repeating decimal)
+  - In decimal (i.e., base-10 digits) we often choose some max number of digits (some "precision"), and round the number (e.g., `0.6666666667`)
+
+<!-- Some nnumbers are just two extreme though, esecially when you start talking about infinities. This is true in decimal too. In these cases, we have to approximate somehow. -->
+<!-- When you see floating point errors what you're seeing is the effects of these approximations -- for example, in binary, the value three-tenths (which can be represented as 0.3 in decimal) is an infinitely repeating value
+
+0.01001100110011... -->
+
+- Some neat tools:
+  - [Converting decimal to binary](https://www.rapidtables.com/convert/number/decimal-to-binary.html)
+  - [Exploring floating point representations](https://www.binaryconvert.com/result_float.html)
+
+---
+
+## All data ends up in binary
+
 
 ---
 
