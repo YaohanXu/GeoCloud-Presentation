@@ -189,6 +189,34 @@ Nope, it just means you should use the right tool for the job.
 
 ---
 
+## Unions
+
+```sql
+with all_trips as (
+    select start_station, start_time, start_lon, start_lat
+    from indego.trips_2021_q3
+
+    union all
+
+    select start_station, start_time, start_lon, start_lat
+    from indego.trips_2022_q3
+)
+
+select
+    start_station as station_id,
+    st_makepoint(start_lon, start_lat)::geography as station_geog,
+    count(*) as num_trips
+from all_trips
+where
+    extract(hour from start_time) >= 7
+    and extract(hour from start_time) < 10
+group by station_id, station_geog
+order by num_trips desc
+limit 5;
+```
+
+---
+
 # Database Indexes
 
 <!--  We're going to be talking about how to make slow queries run faster, but note that for Assignment 1, none of this should be necessary. If your Assignment 1 queries are taking longer than a few seconds, then maybe rethink your approach. -->
