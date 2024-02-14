@@ -13,21 +13,25 @@ style: |
 ---
 
 ## Agenda
-1. Testing your code
-1. Things to look out for in your assignment (Meyerson location, integer division)
+1. Things to look out for in assignment #1
 1. Database Indexes
 1. Explaining/analyzing your query plans
-
----
-
-## Testing your code
+1. Lateral Joins
 
 ---
 
 ## Location of Meyerson Hall
 
+<!-- I mentioned this in the assignment itself, but use this point for Meyerson Hall, just to make sure that the calculations are being done the same way as I did them for the tests.
+
+There's nothing special about this point -- I just got it from Google. -->
+
 * Use this: `POINT(-75.1925955 39.9524158)`
-* This is the location that [Google Maps](https://www.google.com/maps/place/Meyerson+Hall,+210+S+34th+St,+Philadelphia,+PA+19104/@39.9522514,-75.1947521,17z/data=!3m1!4b1!4m6!3m5!1s0x89c6c65a636cfff1:0x7f6ed003cb68de7f!8m2!3d39.9522514!4d-75.1925634!16s%2Fm%2F02pm0q8) reports. It is not necessarily a more correct location of Meyerson Hall than you might otherwise use, but it'll play nicely with the tests.
+
+  This is the location that [Google Maps](https://www.google.com/maps/place/Meyerson+Hall,+210+S+34th+St,+Philadelphia,+PA+19104/@39.9522514,-75.1947521,17z/data=!3m1!4b1!4m6!3m5!1s0x89c6c65a636cfff1:0x7f6ed003cb68de7f!8m2!3d39.9522514!4d-75.1925634!16s%2Fm%2F02pm0q8) reports. It is not necessarily a more correct location of Meyerson Hall than you might otherwise use, but it'll play nicely with the tests.
+
+<!-- Obviously Meyerson Hall is not actually a point; I could have used a polygon (I mean, Meyerson isn't a polygon either -- it's all approximations), but that's overkill. Choose the model that works well enough for your purposes. -->
+
 * If I were extra, I would use this (from the PWD parcel file):
   ```
   POLYGON( (
@@ -63,8 +67,8 @@ select 10 / 4
 ## Integer Division
 
 - Divide two numbers and return the integer part of the result
-* Kind of like division with real-world non-divisible objects (e.g., I have 10 dollar bills, and want to distribute to 4 people -- each gets 2 and I have 2 left over)
-* You can get the remainder with the modulus (`%`) operation:
+- Kind of like division with real-world non-divisible objects (e.g., I have 10 dollar bills, and want to distribute to 4 people -- each gets 2 and I have 2 left over)
+- You can get the remainder with the modulus (`%`) operation:
   ```sql
   select 10 % 2
   ```
@@ -79,27 +83,109 @@ For example, `COUNT`.
 
 ## Floating-point Numbers
 
-- Floating-point number are _an approximation of_ real numbers. For example, try:
+* Floating-point number are _an approximation of_ real numbers. For example, try:
   ```sql
   select (0.1)::double precision + (0.2)::double precision;
   ```
-- In SQL `1` is an integer, but `1.0` is a floating-point number.
-- When you multiply or divide between floating-point numbers and integers, you get floating-point numbers.
+
+<!-- [FIRST BULLET]
+
+This is known as a floating-point error. Floating-point errors don't mean the programmer has done something wrong. It's not that kind of error. It's more akin to error in a scientific experiement. It's normal and you should expect it, but also you need to account for it. 
+
+[CLICK] 
+
+In PostgreSQL there are three general types of numbers. -->
+
+* In SQL `1` is an integer, `1.0` is a numeric value, and `1.0::real` is a floating point value. In PostgreSQL:
+  - `numeric` and `decimal` are exact number types
+  - `real` and `double precision` are inexact, floating-point types
+
+<!-- [SECOND BULLET] 
+
+[CLICK] -->
+
+* When you operate on numeric values, you get numeric results. When you operate floating-point values, you get floating-point results.
   ```sql
-  select 1.0 * 10 / 4
+  select
+    1.0 * 10 / 4 as exact_num,
+    1.0::real * 10 / 4 as inexact_num
   ```
+
+<!-- [THIRD BULLET] -->
 
 ---
 
 ## Quick aside: It's because of binary
 
-* Computers* represent data in "bits" (binary digits)
-* All integers (up to a certain maximum) can be exactly represented in a finite number of bits
-* Some real numbers _cannot_ be represented in a **finite** number of bits (just like in decimal, e.g. ⅔ is an _infinite_ repeating decimal)
-* In decimal we often choose some max number of digits (some "precision"), and round the number (e.g., `0.6666666667`)
-* Some neat tools:
-  * [Converting decimal to binary](https://www.rapidtables.com/convert/number/decimal-to-binary.html)
-  * [Exploring floating point representations](https://www.binaryconvert.com/result_float.html)
+<!-- Floating point errors happen because of how computers store numbers. -->
+
+- Computers* represent data in "bits" (binary digits, i.e. base-2 digits)
+
+<!-- The numbers we're used to writing are decimal numbers, or base-10 numbers. That just means they have 10 digits, 0 though 9. But computers use binary -- base-2. The digits are 0 and 1, because it's easy to represent two values (for example, low vs high voltage). -->
+
+- All integers (up to a certain maximum) can be exactly represented in a finite number of bits
+
+<!-- Representing numbers in binary isn't all that different from representing them in decimal. Take the number 135. To represent this in decimal repeatedly divide by 10 and place the remainder in the appropriate place.
+
+135 / 10 = 13 r 5 (in the ones column)
+13 / 10 = 1 r 3 (in the tens column)
+1 / 10 = 0 r 1 (in the hundreds column)
+
+Do the same with binary:
+
+135 / 2 = 67 r 1 (in the ones column)
+67 / 2 = 33 r 1 (in the twos column)
+33 / 2 = 16 r 1 (in the fours column)
+16 / 2 = 8 r 0 (in the eights column)
+8 / 2 = 4 r 0 (in the sixteens column)
+4 / 2 = 2 r 0 (in the thirtytwos column)
+2 / 2 = 1 r 0 (in the sixtyfours column)
+1 / 2 = 0 r 1 (in the 128s column)
+
+So you need 8 bits to represent the number 135. In fact, 8 bits can represent numbers up to 255. That's not very high, but most computers today use either 32 bit or 64 bit integers. You can represent plenty big numbers with 64 bits.
+
+-->
+
+- Some real numbers _cannot_ be represented in a **finite** number of bits (just like in decimal, e.g. ⅔ is an _infinite_ repeating decimal)
+
+<!-- Some nnumbers are just two extreme though, esecially when you start talking about infinities. This is true in decimal too. In these cases, we have to approximate somehow. -->
+
+- In decimal (i.e., base-10 digits) we often choose some max number of digits (some "precision"), and round the number (e.g., `0.6666666667`)
+
+<!-- When you see floating point errors what you're seeing is the effects of these approximations -- for example, in binary, the value three-tenths (which can be represented as 0.3 in decimal) is an infinitely repeating value
+
+0.01001100110011... -->
+
+- Some neat tools:
+  - [Converting decimal to binary](https://www.rapidtables.com/convert/number/decimal-to-binary.html)
+  - [Exploring floating point representations](https://www.binaryconvert.com/result_float.html)
+
+---
+
+## More examples of numeric wackiness
+
+```sql
+select
+  100::real / 3 * 3 as real_result,
+  100::numeric / 3 * 3 as numeric_result;
+```
+
+Does that mean that floating point types are more accurate?
+
+```sql
+select
+  100::real / 3 as real_result,
+  100::numeric / 3 as numeric_result;
+```
+
+Nope, it just means you should use the right tool for the job.
+
+---
+
+## Floating-point vs Numeric
+
+- Similar to `geography` vs `geometry` -- float is faster, numeric is more "exact"
+- Some functions return float (e.g. spatial accessors like `ST_X`/`ST_Y`, or spatial measures like `ST_Area`)
 
 ---
 
@@ -111,8 +197,8 @@ For example, `COUNT`.
 
 ## Let’s try an example - _Show distribution of transit stops by census block group_
 
-1.  Load Philadelphia 2010 Census Block Groups [from OpenDataPhilly](https://opendataphilly.org/dataset/census-block-groups)
-    - I downloaded the GeoJSON and used **ogr2ogr** to load into a table named `census.block_groups_2010`.
+1.  Load Philadelphia 2020 Census Block Groups [from the Census FTP](https://www2.census.gov/geo/tiger/TIGER2020/BG/)
+    - I downloaded the Shapefile zip for PA (42) and used **ogr2ogr** to load into a table named `census.blockgroups_2020`.
 2.  Load SEPTA city transit ("bus") stop locations [from SEPTA’s GitHub](https://github.com/septadev/GTFS/releases)
     - I downloaded the latest **gtfs_public.zip** file, extracted the **google_bus.zip** file, and extracted the **stops.txt** file from there. Then I used **csvsql** to load into a table named `septa.bus_stops`.
 
@@ -131,12 +217,14 @@ Loading the census block groups in a terminal:
 ```sh
 ogr2ogr \
   -f "PostgreSQL" \
-  -nln "census.block_groups_2010" \
-  -lco "OVERWRITE=yes" \
+  -nln "census.blockgroups_2020" \
+  -nlt MULTIPOLYGON \
+  -t_srs EPSG:4326 \
   -lco "GEOM_TYPE=geography" \
   -lco "GEOMETRY_NAME=geog" \
+  -overwrite \
   PG:"host=localhost port=5432 dbname=musa_509 user=postgres password=postgres" \
-  ~/Downloads/Census_Block_Groups_2010.geojson
+  ~/Downloads/tl_2020_42_bg/tl_2020_42_bg.shp
 ```
 
 _(remember on, Windows PowerShell, replace backslashes (`\`) with backticks (``` ` ```))_
@@ -153,7 +241,7 @@ csvsql \
   --create-if-not-exists \
   --db-schema "septa" \
   --tables "bus_stops" \
-  ~/Downloads/stops.txt
+  ~/Downloads/gtfs_public/google_bus/stops.txt
 ```
 
 ---
@@ -173,14 +261,14 @@ septa_bus_stops as (
 
 -- Select the geoid, geography, and the number of bus stops per sq km.
 select
-    block_groups.geoid10,
-    block_groups.geog,
-    count(bus_stops.*) / st_area(block_groups.geog) * 1000000 as bus_stops_per_sqkm
-from census.block_groups_2010 as block_groups
+    blockgroups.geoid,
+    blockgroups.geog,
+    count(bus_stops.*) / st_area(blockgroups.geog) * 1000000 as bus_stops_per_sqkm
+from census.blockgroups_2020 as blockgroups
 left join septa_bus_stops as bus_stops
-    on st_covers(block_groups.geog, bus_stops.geog)
+    on st_covers(blockgroups.geog, bus_stops.geog)
 group by
-    block_groups.geoid10, block_groups.geog
+    blockgroups.geoid, blockgroups.geog
 order by
     bus_stops_per_sqkm desc
 ```
@@ -193,7 +281,7 @@ First, the septa_bus_stops table does not have a geometry or geography column. I
 
 Then we take that table and join it with the census block groups, where the matching condition checks whether the bus stop geography is inside of the block group geography. We use st_covers because that works fine with geographies whereas st_contains does not.
 
-(~~ Take the query without the "group by", order by the geoid10, and show what the joined table looks like ~~)
+(~~ Take the query without the "group by", order by the geoid, and show what the joined table looks like ~~)
 
 Finally we aggregate all the stops within each census block group to end up with one row for each block group.
 
@@ -214,13 +302,13 @@ https://docs.google.com/presentation/d/1xlsOwURtjUM9GQ7K1QvY4YFhLp0bNkki3opGjI1W
 - When you load a spatial dataset with ogr2ogr it will create an index on the spatial column by default. So will QGIS.
 
   ```sql
-  CREATE INDEX IF NOT EXISTS block_groups_2010_geog_geom_idx
-      ON census.block_groups_2010 USING gist
+  CREATE INDEX IF NOT EXISTS blockgroups_2020_geog_geom_idx
+      ON census.blockgroups_2020 USING gist
       (geog)
       TABLESPACE pg_default;
   ```
 
-- Check on your `census.block_groups_2010` table in PG Admin.
+- Check on your `census.blockgroups_2020` table in PG Admin.
 
 * So, if you have an index, why is mine so much faster?
 
