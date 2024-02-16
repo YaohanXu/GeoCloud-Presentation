@@ -70,7 +70,7 @@ select 10 / 4
 - Kind of like division with real-world non-divisible objects (e.g., I have 10 dollar bills, and want to distribute to 4 people -- each gets 2 and I have 2 left over)
 - You can get the remainder with the modulus (`%`) operation:
   ```sql
-  select 10 % 2
+  select 10 % 4
   ```
 
 ---
@@ -1022,7 +1022,7 @@ CREATE INDEX IF NOT EXISTS bus_stops_geog_idx
 
 -->
 
-> Note that the index expression is more complicated than the one on the `census.block_groups_2010` table. That's because the value we wanted to index was just the `geog` column. However, `septa.bus_stops` doesn't have a `geog` column.
+> Note that the index expression is more complicated than the one on the `census.blockgroups_2020` table. That's because the value we wanted to index was just the `geog` column. However, `septa.bus_stops` doesn't have a `geog` column.
 
 <!-- This is basically telling PostGIS whenever I make a point from the longitude and latitude on this table, treat it as efficiently as if it already existed. -->
 
