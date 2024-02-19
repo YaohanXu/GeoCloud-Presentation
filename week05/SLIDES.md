@@ -8,6 +8,9 @@ style: |
   }
 ---
 
+<!-- _backgroundColor: gray -->
+<!-- _color: white -->
+
 <!-- We're going to move PostgreSQL aside for a while -- we're not saying goodbye, we're just moving it out of the center of our view so that we can make room for the universe of other things we're going to be talking about. 
 
 This week we're going to talk about using programming tools to move data into a particular kind of database called a data warehouse, but before we get there I want to talk about the cloud, and set up our motivation. -->
