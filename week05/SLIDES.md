@@ -8,7 +8,7 @@ style: |
   }
 ---
 
-<!-- _backgroundColor: gray -->
+<!-- _backgroundColor: dimgray -->
 <!-- _color: white -->
 
 <!-- We're going to move PostgreSQL aside for a while -- we're not saying goodbye, we're just moving it out of the center of our view so that we can make room for the universe of other things we're going to be talking about. 
@@ -73,11 +73,44 @@ For the sake of a little bit of exploration, I'll download three formats: the CS
 
 ### 2. Convert the OPA Properties dataset
 
+_Transform the data into a format that BigQuery accepts for external tables; this would be a little-t in **EtLT**._
+
 <!-- In the Data Pipelines Pocket Reference you're going to read about different patterns used in data pipelines. People often talk about "ETL" and "ELT", but Densmore (the author) also refers to "EtLT", which is a pattern we're going to employ often.
 
-We're going to need to translate the file we downloaded into something that BigQuery can understand. There are countless ways we could go about this. For example, as I mentioned before, we could use ogr2ogr to translate it into a CSV with a WKT geography column. Alternatively we could use a simple Python or JavaScript script to do the conversion for us. When we get to Cloud Functions you'll see that using a script turns out to be a pretty convenient option, since we'll eventually want this to be run in a process on a cloud server.
+We're going to need to translate the file we downloaded into something that BigQuery can understand. In doing this, we're not altering the meaning of any of the fields, or aggregating to change any units of analysis, or filtering any of thedata out. Those would all be big-T transformations. This is really just modifying how the data in encoded to make it compatible with our system.
 
-We can use a small script to load the raw data that we downloaded and transform it into a format that's more suitable for BigQuery. -->
+There are countless ways we could go about this. For example, as I mentioned before, we could use ogr2ogr to translate it into a CSV with a WKT geography column. Alternatively we could use a simple Python or JavaScript script to do the conversion for us. When we get to Cloud Functions you'll see that using a script turns out to be a pretty convenient option, since we'll eventually want this to be run in a process on a cloud server. -->
+
+<div class="columns-2">
+<div>
+
+```sh
+ogr2ogr \
+  "./opa_properties_public-4326.csv" \
+  "./opa_properties_public.gdb.zip" \
+  -f CSV \
+  -s_srs "EPSG:2272" \
+  -t_srs "EPSG:4326" \
+  -lco GEOMETRY=AS_WKT \
+  -lco GEOMETRY_NAME=geog \
+  -skipfailures
+```
+
+</div>
+<div>
+
+Load the GeoPackage (`gdb.zip`) file and write a CSV with a new `geog` column containing WKT. Reproject the data from `EPSG:2272` to `EPSG:4326`. Gracefully handle records that have `NULL` geometries (`-skipfailures`).
+
+</div>
+</div>
+
+---
+
+### 2. Convert the OPA Properties dataset
+
+<!-- If we were to use a small script to do this, it might look like one of these. These scripts use the GeoJSON download files, since we don't have to worry about reprojecting the coordinates into 4326. Also, instead of generating a new CSV, it generates data in a format called JSON-L, or new-line-delimited JSON. This is another format that BigQuery plays well with. It's a little more verbose than CSV, but can be compressed pretty small.
+
+The code block on the left is Python and on the right is JavaScript, but the two blocks of code do basically the same thing. -->
 
 <div class="columns-2">
 <div>
