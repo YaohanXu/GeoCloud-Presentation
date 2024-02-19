@@ -67,7 +67,7 @@ Download the Office of Property Assessment's (OPA) property data from [OpenDataP
 
 We could also, download the CSV directly from OpenDataPhilly, but in this case that's not going to get us what we want because the coordinates of the data is in EPSG:2272. Also, I'm going to make a point or two using the GeoJSON.
 
-For the sake of a little bit of exploration, I'll download three formats: the CSV, the GeoJSON, and the GeoPackage. All three of these contain the same data, just encoded in different formats. -->
+For the sake of a little bit of exploration, I'll download two formats: the CSV, and the GeoJSON. Both of these contain the same data, just encoded in different formats. -->
 
 ---
 
@@ -86,11 +86,8 @@ There are countless ways we could go about this. For example, as I mentioned bef
 
 ```sh
 ogr2ogr \
-  "./opa_properties_public-4326.csv" \
-  "./opa_properties_public.gdb.zip" \
-  -f CSV \
-  -s_srs "EPSG:2272" \
-  -t_srs "EPSG:4326" \
+  "data/opa_properties_public-4326.csv" \
+  "data/opa_properties_public.geojson" \
   -lco GEOMETRY=AS_WKT \
   -lco GEOMETRY_NAME=geog \
   -skipfailures
@@ -99,7 +96,7 @@ ogr2ogr \
 </div>
 <div>
 
-Load the GeoPackage (`gdb.zip`) file and write a CSV with a new `geog` column containing WKT. Reproject the data from `EPSG:2272` to `EPSG:4326`. Gracefully handle records that have `NULL` geometries (`-skipfailures`).
+Load the GeoJSON file and write a CSV with a new `geog` column containing WKT. Gracefully handle records that have `NULL` geometries (`-skipfailures`).
 
 </div>
 </div>
