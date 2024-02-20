@@ -109,7 +109,7 @@ Load the GeoJSON file and write a CSV with a new `geog` column containing WKT. G
 
 The code block on the left is Python and on the right is JavaScript, but the two blocks of code do basically the same thing. -->
 
-<div class="columns-2">
+<div class="columns-2" style="font-size: 0.6em">
 <div>
 
 ![Python h:32](images/Python_icon.png)
@@ -117,9 +117,11 @@ The code block on the left is Python and on the right is JavaScript, but the two
 ```python
 import json
 
+
 # Load the data from the GeoJSON file
-with open('opa_properties.geojson') as f:
+with open('opa_properties_public.geojson', 'r') as f:
     data = json.load(f)
+
 
 # Write the data to a JSONL file
 with open('opa_properties.jsonl', 'w') as f:
@@ -127,6 +129,7 @@ with open('opa_properties.jsonl', 'w') as f:
         row = feature['properties']
         row['geog'] = json.dumps(feature['geometry'])
         f.write(json.dumps(row) + '\n')
+
 ```
 
 </div>
@@ -136,10 +139,12 @@ with open('opa_properties.jsonl', 'w') as f:
 
 ```javascript
 import fs from 'node:fs';
+import BigJSON from 'big-json';
 
 // Load the data from the GeoJSON file
-const data = JSON.parse(
-  fs.readFileSync('opa_properties.geojson'));
+const data = await BigJSON.parse({
+  body: fs.readFileSync('opa_properties_public.geojson')
+});
 
 // Write the data to a JSONL file
 const f = fs.createWriteStream('opa_properties.jsonl');
@@ -153,7 +158,7 @@ for (const feature of data.features) {
 </div>
 </div>
 
-_Copy the code above into a file called `opa_properties.py` or `opa_properties.js` and run it._
+_Copy the code above into a file called `opa_properties.py` or `opa_properties.mjs` and run it._
 
 <div class="columns-2">
 <div>
@@ -166,7 +171,7 @@ python3 opa_properties.py
 <div>
 
 ```bash
-node opa_properties.js
+node opa_properties.mjs
 ```
 
 </div>
