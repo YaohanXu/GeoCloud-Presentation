@@ -244,7 +244,7 @@ Instead of this:
 
 Do this:
 
-![Extract and load in a single script width:1200px](images/separate-extract-and-load-sequences.svg)
+![Extract and load in separate scripts width:1200px](images/separate-extract-and-load-sequences.svg)
 
 ---
 
