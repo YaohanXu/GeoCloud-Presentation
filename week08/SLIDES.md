@@ -14,16 +14,20 @@ style: |
 
 ## Agenda
 
-0.  Discuss the rest of the semester
-1.  Review of extracting and (little-t) transforming files
-2.  Loading into BigQuery (via Google Cloud Storage)
-    * Service Accounts
-    * Environment Variables
-3.  Deploying to Google Cloud Platform (GCP)?
-    * Cloud Functions
-    * Cloud Scheduler
-    * Workflows
-4.  Estimating costs
+1.  Pipeline orchestration
+    - Common open-source tools (Airflow, Prefect, Dagster, etc.)
+    - Docker and Kubernetes for development and deployment
+2.  Core pipeline concepts
+    - Tasks and dependencies
+    - Directed Acyclic Graphs (DAGs)
+    - Schedules and triggers
+3.  Running pipelines in the cloud
+    - Cloud Functions and Cloud Run
+    - Workflows
+    - Cloud Scheduler
+4.  Deploying to Google Cloud Platform (GCP)
+    - The `gcloud` command line tool
+5.  Estimating and controlling costs
 
 ---
 
