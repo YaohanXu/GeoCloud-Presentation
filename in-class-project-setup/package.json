@@ -1,0 +1,16 @@
+{
+  "name": "in-class-project-setup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@dotenvx/dotenvx": "^0.26.0",
+    "@octokit/auth-token": "^5.0.1",
+    "@octokit/rest": "^20.0.2"
+  }
+}

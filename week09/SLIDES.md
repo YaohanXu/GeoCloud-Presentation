@@ -8,311 +8,92 @@ style: |
   }
 ---
 
-## Quick Git Tip:
-
-- Do not store large files in your git repostories. Basically anything over 50MB should be stored in GCS or S3 or some other cloud file storage (which GitHub is not).
-
----
-
-# Deploying to the Cloud
-
-For a pipeline, you'll have to create a few types of resources in Google Cloud:
-1.  The individual functions that will be run as part of the pipeline
-2.  The workflow that will orchestrate the functions
-3.  A scheduler job that will trigger the workflow
-
-You'll also have to adjust the permissions for your service account so that it can access the resources it needs to.
+# Implementing ELT with Cloud Services, Part 3
+## Modeling and Transforming Data
 
 ---
 
-![bg height:600px](images/workflows-diagram.png)
+## Agenda
 
-
-
----
-
-## Install the `gcloud` command line tool
-
-You can do everything we're going to do through the GUI (the Google Cloud Console), but most of it will be faster through the CLI. You can install the `gcloud` command line tool by following the instructions [here](https://cloud.google.com/sdk/docs/install-sdk). Follow those instructions at least through the _Initialize the gcloud CLI_ section.
+1.  Modeling data in a warehouse
+    - Fact and dimension tables
+    - Star and snowflake schemas
+    - Tools that help (like `dbt`)
+2.  Running data transformations
 
 ---
 
-# 0. Estimating the cost impact
+## Modeling Data in a Warehouse
 
-- Google for "[Google Cloud Pricing Calculator](https://www.google.com/search?q=google+cloud+pricing+calculator)" and click on the first result.
-- Keep an eye on your bill by creating a budget. See [the billing console](https://console.cloud.google.com/billing) for more information.
+<!-- So you've got some raw data in your warehouse. We're gonna talk about what many organizations do next, which is model their data. Note when I'm talking about models here it's different than machine learning models. A "data model" in this sense is just a way of describing the structure of your data.
 
----
+Know that modeling data for transaction processing and for analytical processing are frequently approached differently, and we're going to focus on analytical processing right now. In an OLAP data warehouse, the most frequent approach to data modeling is call "star schema". There's also "snowflake schema", but that's just a star schema with more detail. Generally, both star schema and snowflake schema are known as dimensional modeling.
 
-# 1. Creating the functions
+In a dimensional modeling approach, you represent your domain -- or the stuff that you're modeling with data -- using what are called "fact tables" and "dimension tables". Most information you'll find about what makes a fact table or what makes a dimension table is very hand-wavy. But don't worry, you're not missing anything. The descriptions are vague because data modeling is more of an art than a science -- you're trying to figure out the best way to represent some real world stuff within an imperfect medium of data tables.
 
----
+Still, broadly speeking, I think of facts in dimensional modeling as events that happen, and I think of dimensions as the context around the events -- who did the things, where did the things happen, what did the things happen to, etc. -->
 
-## Convert script to Cloud Function package
+**"Star/Snowflake Schema" (i.e. Dimensional Modeling)**
+-   **Fact tables**  -- Each row represents an event that occurred at a particular time
+-   **Dimension tables** -- Each row represent the who, what, where, when, how, and why of the event.
 
-Each step in your pipeline is going to be its own cloud function package (i.e. folder).
+Martin Kleppmann, _Designing Data Intensive Applications_ (chapter 3)
 
-1. Create a new folder for the cloud function (e.g. `extract_census/` and `prepare_census/` will be different folders.)
-
-<div class="columns-2">
-<div>
-
-![Python h:32](images/Python_icon.png)
-
-2. Move your module (e.g. `extract_census.py`) into the new folder and rename it to `main.py`.
-3. Copy your `requirements.txt` file into the new folder.
-
-</div>
-<div>
-
-![Node.js h:32](images/Node.js_icon.png)
-
-2. Move your module (e.g. `extract_census.mjs`) into the new folder and rename it to `index.mjs`.
-3. Copy your `package.json` file into the new folder. In the `package.json` file, change the `main` property to `"index.mjs"`.
-</div>
-</div>
+Ralph Kimball and Margy Ross, _The Data Warehouse Toolkit_
 
 ---
 
-## Convert script to Cloud Function package
+## Modeling Data in a Warehouse
 
-4.  Create a `.gcloudignore` file in the new folder and add the following lines to it:
+For example, a bikeshare trip model...
 
-    ```
-    .gcloudignore
-    .git
-    .gitignore
+![bg right:70%](images/Bikeshare%20Trip%20Dimensional%20Model.png)
 
-    node_modules
-    *.pyc
-    ```
+<!-- For example, if I wanted to model the activity in a bikeshare system, I might choose to create a trip fact table, and model the bikes, stations, and subscription plans as dimensions. 
 
-    See the [gcloudignore documentation](https://cloud.google.com/sdk/gcloud/reference/topic/gcloudignore) for more information on this file.
+This arrangement of a central fact table connected to several dimension tables is where the name "star schema" comes from. The fact table is like the center of a star.
+
+The trip table may not be the only fact table that is in my system. For example, when someone purchases a new plan, I may want a new fact table to represent that event. So, a dimension table may be connected to several fact tables as well. But, fact tables usually don't reference other fact table (in a snowflake schema, dimension tables may have other sub dimension tables, but the relationships still usually radiate from one central point out). -->
 
 ---
 
-## Deploy the Cloud Function
+<!-- You're raw data is almost never in an optimal structure for whater your data model is, so you usually have to transform it to get it into your organization's desired form. There are many tools that can help you do this data transformation, but one of the most popular (and best in my opinion) is dbt.
 
-5.  To deploy a cloud function, run the following command:
+dbt (Data Build Tool) is an open-source tool used for orchestrating and automating the data transformation and modeling process within data warehouses. While dbt doesn't specifically focus on getting data into a star schema, it plays a crucial role in the overall process of building and maintaining star schemas.
+
+DBT was actually started by a Philadelphia company (they used to be called Fishtown Analytics). It essentially allows you to define your models as SQL queries, and then it will create a relationship graph between your tables.
+
+[https://www.getdbt.com/]
+
+One of the easiest ways to try out DBT is to use their DBT cloud product, but also you can run it locally on your machine. You can literally run `pip install dbt` to get started.
+
+[https://docs.getdbt.com/docs/introduction]
+
+And on top of that, they have excellent documentation.
+
+While we're not going to be using dbt in this class, we will be using techniques that are similar to what dbt does. -->
+
+![bg dbt](images/dbt-logo.png)
+
+---
+
+## Running Data Transformations
+
+In the `week08/explore_phila_data/run_sql/` directory, you'll find a Cloud Function that runs a SQL file.
 
 <!--
-Note that there are two versions of cloud functions. Google is switching to second-generation Cloud Functions. Generally I'd recommend 2nd generation (as there are [some benefits](https://cloud.google.com/functions/docs/concepts/version-comparison#comparison-table)), but there are also some features of 1st-generation functions that aren't yet available for 2nd-generation (like an easier testing interface), so we'll use 1st-generation for now.
+
+In the week07/explore_phila_data/ folder there is a script for loading OPA property data by creating an external table in BigQuery. The SQL for creating the table is hard-coded into the script, but generally speaking, I prefer to keep my SQL in separate SQL files. This is because it allows me to run linters on the SQL, and I don't have to create a new script to run each file.
+
+So, in week08, I added a cloud function that will run any SQL file that is packages alongside it. Let's walk through this file.
+
+[IMPORTS]
+
+- The scripts begin like all of our others, with some imports. At the top we load our environment variables, and down below we load the google cloud libraries we'll need -- namely function framework and bigquery.
+
+- Next we locate the path to the folder with the SQL files.
+
+
+- Note that instead of including the file in the source code, I could just read a full SQL query from the request (like we saw the Carto API does if you take a look at the extract_phl_li_permits script from week06 -- in the week06 lecture there's a section where I break down the components of that URL). However, allowing a user to simply provide any SQL query they want to run is a huge security risk (and I assure you, Carto is doing a lot of validation when they process the query to ensure that nothing harmful is happening; generally speaking, that kind of validation is called input sanitizing, and explains the other half of the XKCD comic that I showed in week02 about Little Bobby Tables). So in this script, instead of allowing _any_ SQL query, I'm just allowing the user to run one of the SQL files that is packaged with the function, as I already know these to be safe.
+
 -->
-
-<div class="columns-2">
-<div>
-
-![Python h:32](images/Python_icon.png)
-
-```bash
-gcloud functions deploy extract-census \
-  --region us-central1 \
-  --runtime python311 \
-  --trigger-http \
-  --source src/extract_census \
-  --entry-point extract_data \
-  --service-account <EMAIL>
-```
-
-</div>
-<div>
-
-![Node.js h:32](images/Node.js_icon.png)
-
-```bash
-gcloud functions deploy extract-census \
-  --region us-central1 \
-  --runtime nodejs18 \
-  --trigger-http \
-  --source src/extract_census \
-  --entry-point extract_data \
-  --service-account <EMAIL>
-```
-
-</div>
-</div>
-
-The options for `--runtime` are documented [here](https://cloud.google.com/functions/docs/concepts/exec#runtimes); I recommend the latest one for your language. The `--source` should be the package (folder) with your code. The `--entry-point` is the name of the function within your code. See the documentation for [`gcloud functions deploy`](https://cloud.google.com/sdk/gcloud/reference/functions/deploy) for more information.
-
----
-
-## Test the Cloud Function
-
-From the CLI, this is:
-
-```bash
-gcloud functions call extract-census
-```
-
-You can see your function at https://console.cloud.google.com/functions/list.
-
----
-
-# 2. Orchestrate the pipeline with a Workflow
-
----
-
-![bg right](images/workflows-1.png)
-
-## Create a workflow
-
-Start in the [Cloud Workflows](https://console.cloud.google.com/workflows) section of the Google Cloud Console.
-
-<!-- It's helpful to have a visual of what's about to happen -->
-
----
-
-![bg](images/workflows-2.png)
-
-<!-- Workflow definitions can be written either in JSON or in a format called YAML (which is a lot like JSON in essence, but with fewer syntactic elements (like curly brackets and the like); many people find it more readable than JSON. -->
-
----
-
-## Workflow syntax
-
-- See https://cloud.google.com/workflows/docs/reference/syntax
-- We're primarily interested in the `http.post` call, which is part of the [Workflows standard library](https://cloud.google.com/workflows/docs/reference/stdlib/overview) of functionality.
-- Because we didn't allow non-authenticated requests to our function, we'll need to provide some `auth`. In this case the authentication type will be [OpenID Connect (OIDC)](https://en.wikipedia.org/wiki/OpenID#OpenID_Connect_(OIDC)).
-
----
-
-## Your Workflow as code
-
-I highly recommend, after seeing that your workflow is structured correctly, that you **copy the JSON or YAML into a file in your project** (e.g. to a file named `census_pipeline.yml`). This will allow you to commit your workflow definition with the rest of your code, and will make it easier to deploy your workflow using the CLI if you hange it.
-
-For example:
-  
-```bash
-gcloud workflows deploy \
-  census-pipeline \
-  --source src/census_pipeline.yml \
-  --location us-central1 \
-  --service-account <EMAIL>
-```
-
----
-
-## Set up your service account
-
-The service account you created for your pipeline is going to need to be able to do a few more things. So far it should already be able to read and write to a Google Cloud Storage bucket (because it has the [Storage Object Admin](https://cloud.google.com/storage/docs/access-control/iam-roles) role), but we'll need to add:
-  - [Cloud Functions Invoker](https://cloud.google.com/functions/docs/reference/iam/roles#cloudfunctions.invoker), since we're asking the workflow to call a cloud function.
-
-```bash
-gcloud projects add-iam-policy-binding \
-  <PROJECT_ID> \
-  --member serviceAccount:<EMAIL> \
-  --role roles/cloudfunctions.invoker
-```
-
----
-
-## Test your workflow
-
-You can test your workflow by running the following command:
-
-```bash
-gcloud workflows execute census-pipeline
-```
-
-For more workflow-related commands, see https://cloud.google.com/sdk/gcloud/reference/workflows
-
----
-
-# 3. Automate the pipeline with a Cloud Scheduler
-
----
-
-## Pick a schedule
-
-- We're going to create a scheduler job, but we have to tell it how frequently to run.
-- We use a [cron expression](https://en.wikipedia.org/wiki/Cron) to specify the schedule. If you've heard of a "cron job", this is what it's referring to.
-- The cron expression is a string of five fields, separated by spaces. The fields are:
-  - `minute` (0-59)
-  - `hour` (0-23)
-  - `day of month` (1-31)
-  - `month` (1-12)
-  - `day of week` (0-6, where 0 is Sunday)
-- [crontab.guru](https://crontab.guru/) is a great resource for figuring out your cron expression.
-
-<!-- It's called crontab.guru because cron jobs are often scheduled in a file called a cron table (in other words, a crontab). -->
-
----
-
-## Create a Cloud Scheduler job
-
-```bash
-gcloud scheduler jobs create http \
-  census-pipeline-schedule \
-  --location us-central1 \
-  --schedule "0 9 * * 1-5" \  # 9:00 AM on Weekdays (Mon-Fri)
-  --uri <WORKFLOW_URI> \
-  --oauth-service-account-email <EMAIL>
-```
-
-The workflow URI can be found in the [Cloud Workflows](https://console.cloud.google.com/workflows) section of the Google Cloud Console, or you can construct it as: `https://workflowexecutions.googleapis.com/v1/projects/<PROJECT_ID>/locations/<LOCATION>/workflows/<WORKFLOW_NAME>/executions`
-
----
-
-## Further empower your service account
-
-The service account you created for your pipeline is going to need one more role:
-  - [Workflows Invoker](https://cloud.google.com/workflows/docs/access-control#workflows.invoker), since we're asking the scheduler to start a workflow.
-
-```bash
-gcloud projects add-iam-policy-binding \
-  <PROJECT_ID> \
-  --member serviceAccount:<EMAIL> \
-  --role roles/workflows.invoker
-```
-
----
-
-## Test your scheduler job
-
-You can test your scheduler job by running the following command:
-
-```bash
-gcloud scheduler jobs run census-pipeline-schedule
-```
-
-For more scheduler-related commands, see https://cloud.google.com/sdk/gcloud/reference/scheduler
-
----
-
-# Add another step to the pipeline
-
-We have extracted and prepared the data, but not made it available in BigQuery. Let's add a step to the pipeline to do that.
-
----
-
-## Create a BigQuery dataset
-
-I'm going to call mine `source_data`.
-
----
-
-## Create a new package folder
-
-I'll call mine `load_census/`. Initialize the folder with a requirements.txt or package.json file.
-
----
-
-## Construct a script that creates an external table
-
-- Refer to the Google BigQuery [client library documentation](https://cloud.google.com/bigquery/docs/reference/libraries), and the documentation on the [`CREATE EXTERNAL TABLE` statement](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_external_table_statement).
-- Add the [BigQuery Job User](https://cloud.google.com/bigquery/docs/access-control#bigquery.jobUser) role to your service account.
-- Test your function locally with the `functions-framework` CLI, and then deploy it to Cloud Functions.
-
----
-
-## Add the script to your workflow
-
-- Add a new step to your workflow YAML file to call your new function.
-- Re-deploy your workflow:
-  ```bash
-  gcloud workflows deploy \
-    census-pipeline \
-    --source src/census_pipeline.yml \
-    --location us-central1 \
-    --service-account <EMAIL>
-  ```
