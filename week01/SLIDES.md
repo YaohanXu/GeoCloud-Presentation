@@ -8,7 +8,7 @@ style: |
   }
 ---
 
-# Welcome to MUSA509: Geospatial Cloud Computing & Visualization
+# Welcome to MUSA5090: Geospatial Cloud Computing & Visualization
 
 ---
 
