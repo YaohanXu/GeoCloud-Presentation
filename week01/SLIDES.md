@@ -151,13 +151,29 @@ Though we'll work in Google Cloud for this class, I'll mention analagous service
 
 ---
 
+## Containers
+
+![bg vertical right:40% 80%](images/Docker_logo.png)
+
+We'll use containerization technologies (specifically **Docker**) to standardize our local environments, and to deploy code to the cloud.
+
+<!-- [...AFTER READING THE SLIDE]
+
+To be honest, I don't really like running Docker on my local computer as part of my regular development workflow.  I find that, after you know what you're doing with the tools you're using, Docker just introduces an unnecessary layer of complication to the flow.
+
+That said, _before_ you're entirely comfortable with all the tools (and there are a lot of tools that we'll be using, as you've just seen), Docker containers can be a useful way to provide some consistency across environments, especially for testing how code will run when it's deployed, and since we're going to be working across Windows, Mac, and once we get into the cloud, Linux-based systems, Docker's going to be useful -- hopefully more help than hindrance.
+
+-->
+
+---
+
 # Logistics
 
 ---
 
 ## Living Course Info
 
-https://github.com/musa-5090-spring-2024/course-info
+https://github.com/Weitzman-MUSA-GeoCloud/course-info
 
 Contains the syllabus, schedule, assignments, etc.
 
@@ -208,10 +224,12 @@ There will occasionally be readings from the following books to provide more dep
 ## Let's get configured!
 
 - **VS Code** (or your editor of choice) and extensions
-  - sqlfluff
-  - eslint (for JavaScript)
-  - flake8 (for Python)
+  - _PostgreSQL_ (by Weijan Chen) for running SQL in VS Code
+  - _Docker_ (by Microsoft) for Dockerfile style and container management
+  - _sqlfluff_ (by dorzey) for SQL style
+  - _eslint_ (by Microsoft) for JavaScript style
+  - _flake8_ (by Microsoft) for Python style
 - A command line terminal (you can use the one embedded in VS Code)
 - A **git** client (e.g. **GitHub Desktop**, or the VS Code git tools, _but also ensure that you can run `git` on the command line_, just in case you need it)
-- **PostgreSQL** and a client such as **PGAdmin** ([sneak peek at next week's slides](https://docs.google.com/presentation/d/1v-nMrK1-xhoOSA4Euq3B5xq6pSm0uv-D_485J4d_yZo/edit#slide=id.g1d409c96e66_0_0))
-  - [PostgreSQL setup instructions](ex_postgres.md)
+- **Docker** and **Docker Desktop** -- we won't use this _today_, but soon.
+- A **PostgreSQL** client such as **PGAdmin** ([sneak peek at next week's slides](https://docs.google.com/presentation/d/1v-nMrK1-xhoOSA4Euq3B5xq6pSm0uv-D_485J4d_yZo/edit#slide=id.g1d409c96e66_0_0))
