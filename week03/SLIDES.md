@@ -31,7 +31,7 @@ style: |
 
 <!--
 
-In the last lecture we started talking about data types. We're going to see some common operations on a few of those data types this time, and we're going to throw spatial data types into the mix, and we'll spend a significant chunk of time talking about the various types of spatial operations you can do with PostGIS. Then we'll talk about using multiple relations in our queries with common table expressions and joins, and we'll finish off with a demonstration that incorporates a number of these concepts.
+In this lecture we're going to take another look at data types. We're going to see some common operations on a few of those data types, and we're going to throw spatial data types into the mix, and we'll spend a significant chunk of time talking about the various types of spatial operations you can do with PostGIS. Then we'll talk about using multiple relations in our queries with common table expressions and joins, and we'll finish off with a demonstration that incorporates a number of these concepts.
 
 When there's SQL being run on-screen, I encourage you to follow along on your own computer. If I choose one tool or another to demonstrate with, I'll try to give my reasoning for my choice of tool, but remember that there is not going to be a single right way to do most of the stuff we'll be getting into.
 
@@ -49,25 +49,44 @@ In the last lecture we chatted about a few of the data types and the operations 
 
 ---
 
-I'll create a new database for any examples I do in this lecture.
+## Creating a database for my work
 
 <!--
 
-I would either choose to create the database in PG Admin, or I would use the `createdb` command which is a command line program that's installed with PostgreSQL. As you have experienced already with other command line tools, it may be neccessary to set up your PATH environment variable to get it to work, but really it's not neccessary. I just prefer it sometimes so that I can stay in my code editor (VS Code). It's always useful to have CLI commands in my back pocket.
+So I'll start by creating a new database for any examples that I do in this lecture. Normally, I would choose to create a database in PGAdmin, or I would use `createdb`, which is a command line program that's installed with the PostgreSQL client tools.  As you've experienced already with other command line tools, it may be necessary to set your PATH environment variable to get it to work correctly, but don't worry about it right now. You don't really need to use the `createdb` command, it's just another option for you to create a database. I prefer it sometimes because I can stay in my code editor, VS Code. It's always useful to have a command line option in my back pocket for various operations.
 
-By the way, the sudo command is something that I have to do to run this command as the postgres database's administrative user. The first password I entered is my own password, and the second is the postgres user's password.
-
+[RUN TERMINAL COMMANDS]
 -->
 
 ### In my terminal...
 
 ```bash
-createdb --port 5432 musa509week03
+createdb --host localhost --port 15437 --user postgres musa5090week03
 ```
 
 <!--
 
-And then, because I know I'll be doing spatial stuff today, I have to install the PostGIS extensions into the database. Remember this is something you have to do on each database, if you want to use the spatial extensions. I'll use the PostgreSQL extension in VS Code for this, again so that I can stay in my code editor.
+In the command that I just ran I specified my port as 15437, but the port for your database server is probably just 5432 -- the default for a PostgreSQL server. I just use a certain port numbering convention for my postgres servers -- I put a one in front for servers running in docker containers, and I end with 7 instead of 2 to specify the server running PostgreSQL version 17. But that's just my convention. If it were PostgreSQL 16 I'd assign it a port ending in 6. I'm not sure what I'm going to do when PostgreSQL 20 comes out.
+
+There are other ways I could have created this database without leaving VS Code. For example, using the PostgreSQL plugin I could hover over the connection and click the plus button.
+
+[OPEN THE POSTGRESQL PLUGIN, HOVER OVER THE CONNECTION, CLICK THE PLUS]
+
+This will start a CREATE DATABASE SQL statement. Yes, you can create a database using PostgreSQL DDL SQL.
+
+So after I've created my database, because I know I'll be doing spatial stuff today, I have to install the PostGIS extensions into the database. Remember this is something you have to do on each database, if you want to use the spatial extensions. I'll use the PostgreSQL extension in VS Code for this, again so that I can stay in my code editor.
+
+To run a SQL statement against a database with the PostgreSQL extension, all I need is to have a SQL file open. It can be an existing file, or a completely new one.
+
+[CREATE A NEW FILE AND SET THE LANGUAGE TO SQL]
+
+To set the language on a file, I usually use a keyboard shortcut where I press Ctrl+K and them M, and type the language that I want, but I can also just go do to the bottom of the window and select the language mode.
+
+[PRESS ESC, THEN CLICK ON THE LANGUAGE PICKER AT THE BOTTOM OF THE WINDOW]
+
+Now I can run a database query.
+
+[CREATE THE POSTGIS EXTENSION]
 
 -->
 
@@ -88,8 +107,8 @@ For these first few quick examples I'm going to load the Indego stations into th
 -->
 
 ```bash
-curl https://www.rideindego.com/wp-content/uploads/2024/01/indego-stations-2024-01-01.csv \
-  | csvcut --not-columns 4-8 \
+curl https://www.rideindego.com/wp-content/uploads/2024/10/indego-stations-2024-10-01.csv \
+  | csvcut --not-columns 4-7 \
   > data/indego_stations.csv
 ```
 
@@ -97,7 +116,26 @@ curl https://www.rideindego.com/wp-content/uploads/2024/01/indego-stations-2024-
 
 In my terminal, I also used something called a "pipe", which is that vertical bar in the terminal command, to send or "pipe" the output from the curl command into the csvcut command. In other words, using the downloaded contents of the CSV file from Indego's website directly as the input for the csvcut command. And then I'm sending the output of the csvcut command to a new file in my data folder. That's what the right angle bracket does.
 
+I'm also going to be taking advantage of schemas this time. You can think of schemas as folders -- organizational aides for your data within a database. I usually think of them as topics for my data. So, all the data relevant to an indego bikeshare topic I'll place in the "indego" schema.
+
 -->
+
+---
+
+## Aside: Database Organizational Terminology
+
+<!--
+
+By the way, different database systems have different names for various concepts. For example, when we talk about BigQuery later in the semester, you'll see that it uses the term "dataset" to refer to the folder-like structures where you put your tables. Honestly, I like the BigQuery terminology better -- it's more straightforward: a set of tables is a dataset. Also, the term "schema" is used for so many things -- the structure of an individual table is referred to as a table schema; the structure of a database overall is called a database schema. So I feel like calling these organizational units "schemas" is just a little confusing. Nevertheless, that's what PostgreSQL calls them.
+
+-->
+
+```mermaid
+flowchart TD
+    A[Database] -->|contains| B[Schema]
+    B -->|contains| C[Table]
+```
+
 
 ---
 
@@ -122,7 +160,7 @@ alter column go_live_date type date
 
 <!--
 
-I'm also going to be taking advantage of schemas this time. I've talked with a few people about schemas in PostgreSQL, but you can think of them as folders -- organizational aides for your data within a database. I usually think of them as topics for my data. So, all the data relevant to an indego bikeshare topic I'll place in the "indego" schema.
+By the way, different database systems have different names for various concepts. For example, when we talk about BigQuery later in the semester, you'll see that it uses the term "dataset" to refer to the folder-like structures where you put your tables. Honestly, I like the BigQuery terminology better -- it's more straightforward: a set of tables is a dataset. Also, the term "schema" is used for so many things -- the structure of an individual table is referred to as a table schema; the structure of a database overall is called a database schema. So I feel like calling these organizational units "schemas" is just a little confusing. Nevertheless, that's what PostgreSQL calls them.
 
 -->
 
@@ -170,17 +208,30 @@ from indego.stations;
 
 ---
 
-### Next consecutive station ID
+### Next consecutive station ID (attempt #1)
 
 <!-- ... and say we are assigning these IDs automatically and consecutively. If we wanted to get the ID of the station that was created after each station we might just add 1 to that station's ID. -->
 ```sql
 select
     station_id,
-    station_id + 1
+    station_id + 1 as next_station_id
 from indego.stations;
 ```
 
-<!-- There are reasons that you might not want to do something like that (for instance you can see that the stations 3001 to 3004 don't exist), but we'll learn about the right way to do this later with WINDOW functions. -->
+---
+
+### Next consecutive station ID (attempt #2)
+
+<!-- There are reasons that you might not want to do something like that (for instance you can see that the stations 3001 to 3004 don't exist). SQL has a feature called WINDOW functions that can help us do this a little better. -->
+
+```sql
+select
+    station_id,
+    lead(station_id) over (order by station_id) as next_station_id
+from indego.stations;
+```
+
+---
 
 ### Station IDs over 3355
 
@@ -195,7 +246,7 @@ where station_id >= 3355;
 
 ### Filtering with dates
 
-<!-- But we don't know if the station_id's are _truly_ consiecutive, so let's use the go_live_date value instead. Let's find the go_live_date for station 3355: -->
+<!-- But we don't know if the station_id's are _truly_ monotonic (which is to say, always increasing), so let's use the go_live_date value instead. Let's find the go_live_date for station 3355: -->
 
 ```sql
 select go_live_date
@@ -214,6 +265,26 @@ where go_live_date >= '2023-10-12';
 ```
 
 <!-- Even though we use a string to specify the date, behind the scenes PostgreSQL will sneakily try to cast the value to the same type as the field it's comparing against. If you use a string that PostgreSQL doesn't know how to automatically convert then you'll get an error. -->
+
+---
+
+### Using subqueries
+
+<!-- Notice that we had to run two queries above to do what we wanted, but we can do that in one query. -->
+
+```sql
+select *
+from indego.stations
+where go_live_date >= (
+    select go_live_date
+    from indego.stations
+    where station_id = 3355
+);
+```
+
+<!-- This query uses something called a subquery to get the go_live_date for the station with id 3355. Postgres will first run the subquery between the parentheses, get the result, and then replace the subquery in the main query with that result.
+
+Subqueries are great, but later on we'll see something called a Common Table Expression that makes subqueries even better.-->
 
 ---
 
@@ -396,9 +467,9 @@ Now since we loaded this data in with a GEOGRAPHY type, we can be pretty confide
 select
     id,
     name,
-    st_distance(
+    ST_Distance(
         geog,
-        st_makepoint(-75.1634, 39.9529)
+        ST_MakePoint(-75.1634, 39.9529)
     ) as dist_geog
 from indego.stations_geo
 order by dist_geog;
@@ -410,7 +481,7 @@ With the way that we're working with this data right now (i.e. it's not a lot of
 
 ---
 
-### Measuring distance with Web Mercator
+### Reprojecting data
 
 <!-- Let's try using CRS 3857 -- better knows as Web Mercator -- first. The vast majority of maps you look at online use this projection. If you go to Google Maps and zoom all the way out, you're looking at a world map projected into CRS 3857. This projection is nominally based on meters, and if you're very near the equator it's actually quite accurate. But as soon as you get away from the equator it starts to break down.
 
@@ -422,26 +493,30 @@ alter table indego.stations_geo
     add column geom_3857 geometry;
 
 update indego.stations_geo set
-    geom_3857 = st_transform(geog::geometry, 3857),
+    geom_3857 = ST_Transform(geog::geometry, 3857),
 ```
 
-<!-- When we cast a geography to a geometry, PostGIS knows it should be interpreted in CRS 4326, so we can use the st_transform function to project the geometry value from 4326 to 3857.
+<!-- When we cast a geography to a geometry, PostGIS knows it should be interpreted in CRS 4326, so we can use the ST_Transform function to project the geometry value from 4326 to 3857. -->
 
-Now that we have a new column with our data in web mercator we can calculate the distances between city hall and each station in that projection: -->
+---
+
+### Measuring distance with Web Mercator
+
+<!-- Now that we have a new column with our data in web mercator we can calculate the distances between city hall and each station in that projection: -->
 
 ```sql
 select
     id,
     name,
-    st_distance(
+    ST_Distance(
         geog,
-        st_makepoint(-75.1634, 39.9529)
+        ST_MakePoint(-75.1634, 39.9529)
     ) as dist_geog,
-    st_distance(
+    ST_Distance(
         geom_3857,
-        st_transform(
-            st_setsrid(
-                st_makepoint(-75.1634, 39.9529), 
+        ST_Transform(
+            ST_SetSRID(
+                ST_MakePoint(-75.1634, 39.9529), 
                 4326
             ),
             3857
@@ -461,37 +536,41 @@ But look at the differences between these values! For the closest Indego station
 
 ---
 
-### Measuring distance with a local projection
+### Reprojecting data into a local projection
 
 <!-- Now let's try in a local projection. -->
 
 Let's use [PA State Plane South (meters)](https://epsg.io/32129) instead.
 
-<!-- I like using 32129 for Philadelphia data. A lot of data that you'll get from the city of Philadelphia or the state of PA might be in CRS 2272, which is the same as 32129 except it uses feet as it's unit of length. But we're going to use 32129. 
-
-This is going to look much the same as what we did for web mercator. -->
+<!-- I like using 32129 for Philadelphia data. A lot of data that you'll get from the city of Philadelphia or the state of PA might be in CRS 2272, which is the same as 32129 except it uses feet as it's unit of length. But we're going to use 32129. --> 
 
 ```sql
 alter table indego.stations_geo
     add column geom_32129 geometry;
 
 update indego.stations_geo set
-    geom_32129 = st_transform(geog::geometry, 32129),
+    geom_32129 = ST_Transform(geog::geometry, 32129),
 ```
+
+---
+
+### Measuring distance with a local projection
+
+<!-- This is going to look much the same as what we did for web mercator. -->
 
 ```sql
 select
     id,
     name,
-    st_distance(
+    ST_Distance(
         geog,
-        st_makepoint(-75.1634, 39.9529)
+        ST_MakePoint(-75.1634, 39.9529)
     ) as dist_geog,
-    st_distance(
+    ST_Distance(
         geom_32129,
-        st_transform(
-            st_setsrid(
-                st_makepoint(-75.1634, 39.9529), 
+        ST_Transform(
+            ST_SetSRID(
+                ST_MakePoint(-75.1634, 39.9529), 
                 4326
             ),
             32129
@@ -574,21 +653,25 @@ https://postgis.net/docs/PostGIS_Special_Functions_Index.html#PostGIS_SQLMM_Func
 
 # Common Table Expressions
 
-<!-- A common table expression is a SQL structure that you can use to reduce duplication and increase readablility in your SQL code. A common table expression is basically a virtual table that you create within the context of just a single query. -->
+<!-- A common table expression (or CTE) is a SQL structure that you can use to reduce duplication and increase readablility in your SQL code. A common table expression is basically a virtual table that you create within the context of just a single query. It differs from a subquery in that you can give a CTE a name and then refer to it by that name. -->
 
 ---
 
-<!-- Let's use our distance query as an example. Notice that we repeat the coordinates for city hall in the query. We also call st_makepoint on those coordinates multiple times. Here we can use a CTE to get rid of that duplication. 
+<!-- Let's use our distance query as an example. In our previous code, we repeated the coordinates for city hall in the query. We also called ST_MakePoint on those coordinates multiple times.
 
-The table that defines our CTE just has a single row, and that row has a single field called geom. We can use a join (specifically a cross join in this case) to tell our final bottom query that it should pull data in from the CTE.
+Here we use a CTE to get rid of that duplication. The table that defines our CTE just has a single row, and that row has a single field called geom. We can use a join (specifically a cross join in this case) to tell our final bottom query that it should pull data in from the CTE. We'll talk about joins in a moment.
 
-Finally, we can run the query. The results will be the same as before, but our final query code is a little more readable. -->
+Finally, we can run the query. The results will be the same as before, but our final query code is a little more readable.
+
+A couple things to note in this code:
+1. In the first call to ST_Distance, we're passing in a geography type value and a geometry type value. PostGIS can technically only measure geography values with other geography values, or geometry values with other geometry values. When you try to measure between a geography and geometry value, postgis will attempt to convert the geometries to geographies. This is called implicit casting (like we saw with the string that was automatically converted to a date). However, PostGIS can only cast SRID4326 geometry values to geographies, so geometries in any other coordinate system would have caused an error.
+2. The other thing is that PostGIS can only measure between geometries in the same SRID. That is why we had to transform the city hall geometry, which we created as SRID 4326, before we could measure the distance with the PA state plane geometry in SRID 32129. -->
 
 ```sql
 with city_hall as (
     select
-        st_setsrid(
-            st_makepoint(-75.1634, 39.9529),
+        ST_SetSRID(
+            ST_MakePoint(-75.1634, 39.9529),
             4326
         ) as geom
 )
@@ -597,14 +680,14 @@ select
     id,
     name,
 
-    st_distance(
+    ST_Distance(
         geog,
         city_hall.geom
     ) as dist_geo,
 
-    st_distance(
+    ST_Distance(
         geom_32129,
-        st_transform(city_hall.geom, 32129)
+        ST_Transform(city_hall.geom, 32129)
     ) as dist_32129
 
 from indego.stations_geo
