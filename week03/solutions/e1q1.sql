@@ -1,8 +1,8 @@
 with neighborhoods_w_area as (
     select
         name,
-        st_area(geog) / 1000000 as area_sqkm,
-        geog
+        geog,
+        st_area(geog) / 1000000 as area_sqkm
     from phl.neighborhoods
 )
 
