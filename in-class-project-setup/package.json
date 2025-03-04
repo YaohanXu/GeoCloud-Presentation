@@ -11,6 +11,8 @@
   "dependencies": {
     "@dotenvx/dotenvx": "^0.26.0",
     "@octokit/auth-token": "^5.0.1",
-    "@octokit/rest": "^20.0.2"
+    "@octokit/rest": "^20.0.2",
+    "gray-matter": "^4.0.3",
+    "yaml": "^2.7.0"
   }
 }
