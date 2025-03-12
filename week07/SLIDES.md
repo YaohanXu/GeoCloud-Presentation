@@ -31,7 +31,7 @@ style: |
 
 ## Review: Extract and Prepare
 
-https://github.com/musa-5090-spring-2024/course-info/tree/main/week06#code-samples
+https://github.com/Weitzman-MUSA-GeoCloud/course-info/tree/main/week06#code-samples
 
 <!-- 
 
