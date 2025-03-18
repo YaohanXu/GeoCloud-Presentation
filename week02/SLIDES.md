@@ -63,7 +63,7 @@ Let's try it out. -->
 
 ### 1. Inspect the header and first few rows
 
-https://www.rideindego.com/wp-content/uploads/2024/01/indego-stations-2024-01-01.csv  
+https://www.rideindego.com/wp-content/uploads/2024/10/indego-stations-2024-10-01.csv  
 
 Sometimes you may notice that some preliminary cleaning or correction must be done (as is the case with the above file).
 

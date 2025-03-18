@@ -72,7 +72,7 @@ COPY indego_stations
 FROM '...path to file goes here...'
 WITH (FORMAT csv, HEADER true);
 
-/home/mjumbewu/Code/musa/musa-509/spring-2024/course-info/week02/indego-stations-2024-01-01-clean.csv
+/home/mjumbewu/Code/musa/musa-509/spring-2024/course-info/week02/indego-stations-2024-10-01-clean.csv
 
 ALTER TABLE indego_stations
 ALTER COLUMN go_live_date TYPE DATE

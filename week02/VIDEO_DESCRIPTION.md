@@ -1,25 +1,25 @@
-Contents:
-00:00 Intro
-01:55 Overview of Database Systems
-03:33 NoSQL: Key-value Databases
-06:43 NoSQL: Document Databases
-08:32 NoSQL: Graph Databases
-09:58 Relational Databases
-15:17 PostgreSQL
-20:06 The PostgreSQL & PostGIS Architecture
-24:41 SQL Overview
-29:11 DDL & DML 
-31:09 Querying (SELECT Statements)
-32:41 Reading SQL Statement Documentation
-34:51 Query Evaluation Order
-36:02 Code Style
-40:45 Core Data Types in PostgreSQL
-42:19 Casting Between Data Types
-45:30 Casting: Dates and Locales
-49:50 Loading Data into PostGIS
-01:08:26 Definition of Open Source GIS Terms
-01:15:10 Reading ogr2ogr Errors
-01:18:15 ogr2ogr Documentation
+Contents:  
+00:00 Intro  
+01:55 Overview of Database Systems  
+03:33 NoSQL: Key-value Databases  
+06:43 NoSQL: Document Databases  
+08:32 NoSQL: Graph Databases  
+09:58 Relational Databases  
+15:17 PostgreSQL  
+20:06 The PostgreSQL & PostGIS Architecture  
+24:41 SQL Overview  
+29:11 DDL & DML   
+31:09 Querying (SELECT Statements)  
+32:41 Reading SQL Statement Documentation  
+34:51 Query Evaluation Order  
+36:02 Code Style  
+40:45 Core Data Types in PostgreSQL  
+42:19 Casting Between Data Types  
+45:30 Casting: Dates and Locales  
+49:50 Loading Data into PostGIS  
+01:08:26 Definition of Open Source GIS Terms  
+01:15:10 Reading ogr2ogr Errors  
+01:18:15 ogr2ogr Documentation  
 
 Slides:
 * Intro to Databases: https://docs.google.com/presentation/d/1v-nMrK1-xhoOSA4Euq3B5xq6pSm0uv-D_485J4d_yZo/edit?usp=sharing
