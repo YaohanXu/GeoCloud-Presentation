@@ -6,11 +6,13 @@ I'm going to demonstrate exercise #1 for this week. Both of the exercises use Po
 
 This first exercise depends on:
 * **Bikeshare station location data**, which I've already loaded into the `indego.stations_geo` table, and
-* **Neighborhood polygon data** (there is no official source of neighborhood boundaries in Philadelphia, but Azavea (which is now called Element 84) has created [the go-to source](https://github.com/azavea/geo-data/tree/master/Neighborhoods_Philadelphia))
+* **Neighborhood polygon data** (there is no official source of neighborhood boundaries in Philadelphia, but Azavea (which is now called Element 84) has created [the go-to source](https://github.com/opendataphilly/open-geo-data/tree/master/philadelphia-neighborhoods))
 
 I've already downloaded that file into my local folder, created a new schema named `phl`:
 
 ```sql
+create extension if not exists postgis;
+create schema if not exists indego;
 create schema if not exists phl;
 ```
 
@@ -25,7 +27,7 @@ ogr2ogr \
     -lco "GEOMETRY_NAME=geog" \
     -lco "OVERWRITE=yes" \
     PG:"host=localhost port=5434 dbname=musa509week03 user=postgres password=postgres" \
-    "data/phl_neighborhoods.geojson"
+    "data/philadelphia-neighborhoods.geojson"
 ```
 
 1.  Write a query that lists which neighborhoods have the highest density of bikeshare stations. Let's say "density" means number of stations per square km.
@@ -38,24 +40,24 @@ ogr2ogr \
     * Note that the neighborhoods dataset has an area field; don't trust that field. Calculate the area using `ST_Area` yourself.
 
 ```sql
-with neighborhoods_sqm as (
+with neighborhoods_w_area as (
     select 
         name,
         shape_area, 
-        st_area(geog) / 1000000 as shape_area_sqkm,
+        st_area(geog) / 1000000 as area_sqkm,
         geog
     from phl.neighborhoods
 )
 
 select
-    ngh.name,
-    count(sta.id) / ngh.shape_area_sqkm as density,
-    ngh.geog
-from neighborhoods_sqm as ngh
+    ngb.name,
+    ngb.geog,
+    count(sta.id) / ngb.area_sqkm as density_sqkm
+from neighborhoods_w_area as ngb
 left join indego.stations_geo as sta
-    on st_covers(ngh.geog, sta.geog)
-group by ngh.name, ngh.geog, ngh.shape_area_sqkm
-order by density desc
+    on st_covers(ngb.geog, sta.geog)
+group by ngb.name, ngb.geog, ngb.area_sqkm
+order by density_sqkm desc
 ```
 
 2.  Write a query to get the average bikeshare station density across _all the neighborhoods that have a non-zero bike share station density_.
