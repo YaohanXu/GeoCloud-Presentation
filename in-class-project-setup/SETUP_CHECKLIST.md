@@ -12,7 +12,7 @@
 - [ ] Create a new role called "Student Team Member" in each project. Initialize with permissions from "Editor" and "Project IAM Admin".
 - [ ] Add a principal for each group member to the "Student Team Member" role in the project. You can do this through the Console GUI, or using the [`gcloud projects add-iam-policy-binding`](https://cloud.google.com/sdk/gcloud/reference/projects/add-iam-policy-binding) command.
 - [ ] Create a new service account for each team. Add the "BigQuery Data Editor", "BigQuery Job User", "Cloud Run Invoker", "Storage Object Admin", and "Workflows Invoker" roles to the service account.
-- [ ] Create four new buckets for each team: `musa5090s24_team1_raw_data`, `musa5090s24_team1_table_data`, `musa5090s24_team1_public`, and `musa5090s24_team1_temp`.
+- [ ] Create four new buckets for each team: `musa5090s25-team1-raw_data`, `musa5090s25-team1-table_data`, `musa5090s25-team1-public`, and `musa5090s25-team1-temp`.
 - [ ] Give the `temp` bucket a lifecycle rule to delete objects after 7 days.
 - [ ] Allow cross-origin resource sharing on the `public` bucket.
 - [ ] Upload old tiles and chart data for apex charts to the `public` bucket.

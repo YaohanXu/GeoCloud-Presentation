@@ -3,7 +3,7 @@ title: "Create a task to update vector tiles for current assessment values"
 labels: ["Scripting","Analysis","Front-end"]
 ---
 
-This can most easily be done with a [Cloud Run shell job](https://cloud.google.com/run/docs/quickstarts/jobs/build-create-shell) using `ogr2ogr`, or a combination of the two. In brief, there are three steps involved:
+This can most easily be done with a [Cloud Run shell job](https://cloud.google.com/run/docs/quickstarts/jobs/build-create-shell) using `ogr2ogr`. In brief, there are three steps involved:
 1. Download the `property_tile_info.geojson` data file from the `musa5090s25-team<N>-temp_data` bucket
 2. Use `ogr2ogr` to convert the data into a folder of [Mapbox Vector Tile](https://github.com/mapbox/vector-tile-spec) (MVT) protobuf (.pbf) files.
 3. Upload the resulting folder into a Google Cloud Storage bucket. The easiest way to do this may be to use the `gcloud` CLI.

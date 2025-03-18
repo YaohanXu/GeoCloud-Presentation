@@ -1,11 +1,25 @@
 issues:
+  # Data Engineering
   - create-a-pipeline-to-extract-and-load-the-opa-properties-dataset-into-bigquery
-  # - create-a-pipeline-to-extract-and-load-the-opa-property-assessment-history-dataset-into-bigquery
-  # - create-a-pipeline-to-ingest-the-pwd-parcels-into-a-bigquery-table
-  # - create-a-json-file-with-the-previous-tax-year-assessment-distribution-chart-data
-  # - create-a-task-to-update-vector-tiles-for-current-assessment-values
-  # - create-a-task-to-run-the-current-assessment-value-model  # Depends on `create-an-ml-model-for-calculating-the-current-assessment-value-of-a-given-property`
+  - create-a-pipeline-to-extract-and-load-the-opa-property-assessment-history-dataset-into-bigquery
+  - create-a-pipeline-to-ingest-the-pwd-parcels-into-a-bigquery-table
+  - create-a-json-file-with-the-previous-tax-year-assessment-distribution-chart-data
+  - create-a-json-file-with-the-current-tax-year-assessment-distribution-chart-data
+  - create-a-task-to-update-vector-tiles-for-current-assessment-values
+  - create-a-task-to-run-the-current-assessment-value-model  # Depends on `create-an-ml-model-for-calculating-the-current-assessment-value-of-a-given-property`
 
+  # Analytics
+  - develop-a-table-for-tax-year-assessment-value-distributions
+  - develop-a-table-for-current-assessment-value-distributions
+  # - develop-a-table-for-training-the-current-assessment-value-model
+  # - develop-a-table-for-predicted-assessment-value-distributions
+
+  # Data Science
+  - explore-opa-data-and-other-data-sets-for-assessment-model
+  # - create-an-ml-model-for-calculating-the-current-assessment-value-of-a-given-property
+
+  # Application Development
+  - set-up-cors-configuration-for-the-public-bucket
   - create-an-html-page-structure-for-the-assessment-review-ui
   - add-a-map-with-base-tiles-to-the-assessment-review-page
   - add-and-style-a-vector-tile-layer-showing-the-most-recent-tax-year-assessment-values-on-the-map
@@ -13,12 +27,3 @@ issues:
   # - add-a-chart-showing-the-distribution-of-assessed-property-values-based-on-the-most-recent-assessment-year
   # - add-a-chart-showing-the-distribution-of-predicted-property-values
   # - export-a-json-file-with-map-styling-metadata
-
-  - explore-opa-data-and-other-data-sets-for-assessment-model
-  # - create-an-ml-model-for-calculating-the-current-assessment-value-of-a-given-property
-
-  - develop-a-table-for-tax-year-assessment-value-distributions
-  # - develop-a-table-for-current-assessment-value-distributions
-  # - develop-a-table-for-training-the-current-assessment-value-model
-  # - develop-a-table-for-predicted-assessment-value-distributions
-
