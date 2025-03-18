@@ -75,7 +75,7 @@ ogr2ogr \
 gcloud storage cp \
   --recursive \
   ./properties \
-  gs://musa509s23_team01_public/tiles
+  gs://musa5090s25-team<N>-public/tiles
 ```
 
 ## Deploy the Cloud Run job
