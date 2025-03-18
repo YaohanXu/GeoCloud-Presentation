@@ -10,7 +10,7 @@ issues:
 
   # Analytics
   - develop-a-table-for-tax-year-assessment-value-distributions
-  - develop-a-table-for-current-assessment-value-distributions
+  # - develop-a-table-for-current-assessment-value-distributions
   # - develop-a-table-for-training-the-current-assessment-value-model
   # - develop-a-table-for-predicted-assessment-value-distributions
 
