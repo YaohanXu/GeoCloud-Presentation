@@ -11,4 +11,4 @@ The features in the GeoJSON should have the following properties:
 
 ## Acceptance Criteria:
 
-- [ ] A function that generates a file in the `musa5090s24_team<N>_temp_data` bucket named `property_tile_info.geojson`. The geometries should come from the PWD parcels dataset, and the OPA assessment values should come from the OPA dataset, and the predicted property values should come from the model.
+- [ ] A function that generates a file in the `musa5090s25-team<N>-temp_data` bucket named `property_tile_info.geojson`. The geometries should come from the PWD parcels dataset, and the OPA assessment values should come from the OPA dataset, and the predicted property values should come from the model.

@@ -5,8 +5,8 @@ labels: ["Scripting"]
 
 All ETL processes in this project will follow this general pattern:
 1.  Fetch data and store in a folder in the `musa509s23_team01_raw_data` bucket
-2.  Convert data to JSON-L and store in a folder in the `musa509s23_team01_processed_data` bucket
-3.  Create (or replace) a BigQuery external table in the `source` dataset based on the data in the `musa509s23_team01_processed_data` bucket
+2.  Convert data to JSON-L and store in a folder in the `musa509s23_team01_prepared_data` bucket
+3.  Create (or replace) a BigQuery external table in the `source` dataset based on the data in the `musa509s23_team01_prepared_data` bucket
 4.  Create (or replace) a regular BigQuery table in the `core` dataset that has at least one additional column added named `property_id`. E.g.:
     ```sql
     CREATE OR REPLACE core.opa_properties
