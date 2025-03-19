@@ -39,3 +39,7 @@ CMD [ "Rscript", "train-and-predict.R" ]
 ```
 
 Refer to issue #6 for more information on running containers in Cloud Run.
+
+**Acceptance criteria:**
+- [ ] A Cloud Function or Cloud Run Job that runs the current assessment value model and loads the predictions into a BigQuery table named `derived.current_assessments` with the columns `property_id`, `predicted_value`, and `predicted_at`.
+- [ ] The task should be scheduled to run as part of the data pipeline, after the `core.opa_properties` table has been updated with the most recent data.

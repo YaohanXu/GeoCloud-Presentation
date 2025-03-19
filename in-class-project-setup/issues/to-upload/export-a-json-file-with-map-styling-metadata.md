@@ -18,3 +18,8 @@ The JSON file could be simple, like this:
 ```
 
 Or it could be more complex, with multiple properties and multiple types of properties.
+
+**Acceptance criteria:**
+- [ ] A JSON file that contains the necessary metadata for styling your map layer(s) in the front-end
+- [ ] A Cloud Function that generates the JSON file and uploads it to the public bucket
+- [ ] The function should be included as part of the data pipeline
