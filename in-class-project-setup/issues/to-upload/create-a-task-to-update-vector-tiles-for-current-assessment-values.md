@@ -111,3 +111,5 @@ If it's working correctly, it will take a while (like 15 minutes), but will comp
 
 **Acceptance criteria:**
 - [ ] A Cloud Run job named `generate-property-map-tiles` using the Dockerfile and script above
+- [ ] The job should run successfully and copy a bunch of tile files to the public bucket
+- [ ] The job should be scheduled to run as part of the data pipeline

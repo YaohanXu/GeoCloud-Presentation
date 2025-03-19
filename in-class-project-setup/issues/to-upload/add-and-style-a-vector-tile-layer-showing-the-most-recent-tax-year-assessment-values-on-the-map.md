@@ -19,5 +19,5 @@ There are a few things to keep in mind:
   * You can find an example of applying styles based on feature properties for [Maplibre GL JS here](https://maplibre.org/maplibre-gl-js/docs/examples/data-driven-lines/), and you can find documentation for styling `Maplibre GL JS` layers at https://maplibre.org/maplibre-style-spec -- note that the style specification is the same as the Mapbox GL JS style spec, so you can refer to examples in the Mapbox GL JS documentation as well.
 * If you need things like the maximum and minimum assessed values to set the color ramp, which may change each time the underlying data changes, you may want to create an additional JSON file in your public GCS bucket with this information. See issue #20 for more details.
 
-Acceptance criteria:
+**Acceptance criteria:**
 - [ ] A tile layer with property features colored by the predicted assessed value visible on the map
