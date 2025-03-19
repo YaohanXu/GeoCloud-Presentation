@@ -1,6 +1,6 @@
 ---
 title: "Develop a table for tax year assessment value distributions"
-labels: ["Analysis", "Scripting"]
+labels: ["Analysis", "Scripting", "Get Started"]
 ---
 
 Dynamically populate (i.e. `CREATE OR REPLACE`) a table named `derived.tax_year_assessment_bins`. Imagine that the data in this table informs a distribution of the assessed values. The values should be divided into bins of some consistent widths either on a linear or logarithmic scale, and the number of properties with assessed values in each bin should be counted up. For example, it could look something like this:

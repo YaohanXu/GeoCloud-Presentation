@@ -17,6 +17,7 @@ const defaultLabelColors = {
   "Scripting": "D93F0B",       // Red
   "Analysis": "0E8A16", // Green
   "Data Science": "5319E7", // Purple
+  "Get Started": "FBCA04", // Yellow
 };
 
 const variables = {

@@ -1,6 +1,6 @@
 ---
 title: "Create a pipeline to extract and load the OPA Properties dataset into BigQuery"
-labels: ["Scripting"]
+labels: ["Scripting","Get Started"]
 ---
 
 All ingest processes in this project will follow this general pattern:

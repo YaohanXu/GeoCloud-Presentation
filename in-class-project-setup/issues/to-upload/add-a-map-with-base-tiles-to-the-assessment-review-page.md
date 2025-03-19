@@ -1,6 +1,6 @@
 ---
 title: "Add a map with base tiles to the assessment review page"
-labels: ["Front-end"]
+labels: ["Front-end","Get Started"]
 ---
 
 Initialize a map (using Leaflet or another library of your choice, like Maplibre GL JS) on the review UI. Choose a base map tile set from Mapbox, Stadia, or another provider of your choice.
