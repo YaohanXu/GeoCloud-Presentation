@@ -20,23 +20,27 @@ const defaultLabelColors = {
   "Get Started": "FBCA04", // Yellow
 };
 
-const variables = {
-  gcp_project: 'musa5090s25_team1',
-};
+let knownLabels = new Set();
+const owner = 'Weitzman-MUSA-GeoCloud';
+const repo = 's25-team1-cama';
 
 async function ensureLabelExists(labelName, labelColor) {
+  if (knownLabels.has(labelName)) {
+    return;
+  }
+
   try {
     // Check if the label already exists
     await octokit.request("GET /repos/{owner}/{repo}/labels/{name}", {
-      owner: 'Weitzman-MUSA-GeoCloud', // Replace with your GitHub username or organization
-      repo: 's25-team1-cama', // Replace with your repository name
+      owner, // Replace with your GitHub username or organization
+      repo,
       name: labelName,
     });
 
     // If the label exists, update its color
     await octokit.request("PATCH /repos/{owner}/{repo}/labels/{name}", {
-      owner: 'Weitzman-MUSA-GeoCloud', // Replace with your GitHub username or organization
-      repo: 's25-team1-cama', // Replace with your repository name
+      owner, // Replace with your GitHub username or organization
+      repo,
       name: labelName,
       color: labelColor || "FFFFFF", // Update the color
       headers: {
@@ -48,8 +52,8 @@ async function ensureLabelExists(labelName, labelColor) {
     if (error.status === 404) {
       // If the label doesn't exist, create it
       await octokit.request("POST /repos/{owner}/{repo}/labels", {
-        owner: 'Weitzman-MUSA-GeoCloud', // Replace with your GitHub username or organization
-        repo: 's25-team1-cama', // Replace with your repository name
+        owner, // Replace with your GitHub username or organization
+        repo,
         name: labelName,
         color: labelColor || "FFFFFF", // Default to white if no color is provided
         headers: {
@@ -61,6 +65,8 @@ async function ensureLabelExists(labelName, labelColor) {
       throw error;
     }
   }
+
+  knownLabels.add(labelName);
 }
 
 async function main() {
@@ -89,8 +95,8 @@ async function main() {
     try {
       // Try to update the issue if it already exists
       await octokit.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
-        owner: 'Weitzman-MUSA-GeoCloud', // Replace with your GitHub username or organization
-        repo: 's25-team1-cama', // Replace with your repository name
+        owner, // Replace with your GitHub username or organization
+        repo,
         issue_number: issueIndex + 1, // Assuming the issue slug is the issue number
         title,
         body,
@@ -104,8 +110,8 @@ async function main() {
       if (error.status === 404) {
         // If the issue doesn't exist, create a new one
         await octokit.request('POST /repos/{owner}/{repo}/issues', {
-          owner: 'Weitzman-MUSA-GeoCloud', // Replace with your GitHub username or organization
-          repo: 's25-team1-cama', // Replace with your repository name
+          owner, // Replace with your GitHub username or organization
+          repo,
           title,
           body,
           labels,
