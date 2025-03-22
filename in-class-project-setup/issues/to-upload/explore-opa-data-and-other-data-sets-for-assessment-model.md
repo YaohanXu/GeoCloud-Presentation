@@ -1,6 +1,6 @@
 ---
 title: "Explore OPA data (and other data sets) for assessment model"
-labels: ["Data Science"]
+labels: ["Data Science","Get Started"]
 ---
 
 In order to add a model to our pipeline, we first need to know what type of model performs best, and what features are most useful for that model. There's not really a way to do that without some good ol' fashioned exploratory data analysis.
