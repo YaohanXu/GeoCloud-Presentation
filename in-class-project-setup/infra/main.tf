@@ -127,6 +127,12 @@ resource "google_project_iam_member" "data_pipeline_user_cloud_run_invoker" {
   member  = "serviceAccount:${google_service_account.data_pipeline_user.email}"
 }
 
+resource "google_project_iam_member" "data_pipeline_user_run_developer" {
+  project = var.cama_prefix
+  role    = "roles/run.developer"
+  member  = "serviceAccount:${google_service_account.data_pipeline_user.email}"
+}
+
 resource "google_project_iam_member" "data_pipeline_user_workflows_invoker" {
   project = var.cama_prefix
   role    = "roles/workflows.invoker"
@@ -144,6 +150,7 @@ resource "google_project_iam_custom_role" "team_member" {
   permissions = setsubtract(
     setunion(
       split("\n", file("${path.module}/permissions/project_iam_admin.txt")),
+      split("\n", file("${path.module}/permissions/storage_object_user.txt")),
       split("\n", file("${path.module}/permissions/service_account_user.txt")),
       split("\n", file("${path.module}/permissions/service_account_token_creator.txt")),
       split("\n", file("${path.module}/permissions/bq_data_owner.txt")),
