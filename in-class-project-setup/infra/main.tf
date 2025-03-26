@@ -129,6 +129,7 @@ resource "google_project_iam_member" "data_pipeline_user_cloud_run_invoker" {
 
 resource "google_project_iam_member" "data_pipeline_user_run_developer" {
   project = var.cama_prefix
+  # Might be necessary for deploying Cloud Run services.
   role    = "roles/run.developer"
   member  = "serviceAccount:${google_service_account.data_pipeline_user.email}"
 }
