@@ -29,4 +29,10 @@ Run the following:
 
 ```bash
 gcloud iam roles describe roles/resourcemanager.projectIamAdmin --format json | jq -r '.includedPermissions | join("\n")' > permissions/project_iam_admin.txt
+
+gcloud iam roles describe roles/iam.serviceAccountUser --format json | jq -r '.includedPermissions | join("\n")' > permissions/service_account_user.txt
+
+gcloud iam roles describe roles/iam.serviceAccountTokenCreator --format json | jq -r '.includedPermissions | join("\n")' > permissions/service_account_token_creator.txt
+
+gcloud iam roles describe roles/bigquery.dataOwner --format json | jq -r '.includedPermissions | join("\n")' > permissions/bq_data_owner.txt
 ```
