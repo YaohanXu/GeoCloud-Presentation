@@ -5,8 +5,9 @@
 # ${cama_prefix}-public         Public data that can be accessed by anyone over HTTP.
 
 resource "google_storage_bucket" "raw_data" {
-  name          = format("%s-raw_data", var.cama_prefix)
-  location      = var.location
+  name                        = format("%s-raw_data", var.cama_prefix)
+  location                    = var.location
+  uniform_bucket_level_access = true
 
   autoclass {
     enabled                = true
@@ -15,8 +16,9 @@ resource "google_storage_bucket" "raw_data" {
 }
 
 resource "google_storage_bucket" "prepared_data" {
-  name          = format("%s-prepared_data", var.cama_prefix)
-  location      = var.location
+  name                        = format("%s-prepared_data", var.cama_prefix)
+  location                    = var.location
+  uniform_bucket_level_access = true
 
   autoclass {
     enabled                = true
@@ -25,8 +27,9 @@ resource "google_storage_bucket" "prepared_data" {
 }
 
 resource "google_storage_bucket" "temp_data" {
-  name          = format("%s-temp_data", var.cama_prefix)
-  location      = var.location
+  name                        = format("%s-temp_data", var.cama_prefix)
+  location                    = var.location
+  uniform_bucket_level_access = true
 
   lifecycle_rule {
     condition {
@@ -40,8 +43,9 @@ resource "google_storage_bucket" "temp_data" {
 }
 
 resource "google_storage_bucket" "public" {
-  name          = format("%s-public", var.cama_prefix)
-  location      = var.location
+  name                        = format("%s-public", var.cama_prefix)
+  location                    = var.location
+  uniform_bucket_level_access = true
 
   website {
     main_page_suffix = "index.html"
@@ -49,10 +53,16 @@ resource "google_storage_bucket" "public" {
   }
 
   cors {
-    origin = ["*"]
-    method = ["GET"]
+    origin          = ["*"]
+    method          = ["GET", "HEAD", "OPTIONS"]
     response_header = ["Content-Type"]
   }
+}
+
+resource "google_storage_bucket_iam_member" "public_viewer" {
+  bucket = google_storage_bucket.public.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
 }
 
 # BigQuery Datasets:
@@ -99,6 +109,12 @@ resource "google_project_iam_member" "data_pipeline_user_bigquery_job_user" {
   member  = "serviceAccount:${google_service_account.data_pipeline_user.email}"
 }
 
+resource "google_project_iam_member" "data_pipeline_user_bigquery_data_owner" {
+  project = var.cama_prefix
+  role    = "roles/bigquery.dataOwner"
+  member  = "serviceAccount:${google_service_account.data_pipeline_user.email}"
+}
+
 resource "google_project_iam_member" "data_pipeline_user_cloud_functions_invoker" {
   project = var.cama_prefix
   role    = "roles/cloudfunctions.invoker"
@@ -108,6 +124,13 @@ resource "google_project_iam_member" "data_pipeline_user_cloud_functions_invoker
 resource "google_project_iam_member" "data_pipeline_user_cloud_run_invoker" {
   project = var.cama_prefix
   role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.data_pipeline_user.email}"
+}
+
+resource "google_project_iam_member" "data_pipeline_user_run_developer" {
+  project = var.cama_prefix
+  # Might be necessary for deploying Cloud Run services.
+  role    = "roles/run.developer"
   member  = "serviceAccount:${google_service_account.data_pipeline_user.email}"
 }
 
@@ -122,13 +145,17 @@ resource "google_project_iam_member" "data_pipeline_user_workflows_invoker" {
 # the permissions from the Project IAM Admin role and any other roles we want.
 
 resource "google_project_iam_custom_role" "team_member" {
-  role_id = "teamMember"
-  title = "Team Member"
+  role_id     = "teamMember"
+  title       = "Team Member"
   description = "Combination of Project IAM Admin and any other roles"
   permissions = setsubtract(
     setunion(
-      split("\n", file("${path.module}/permissions/project_iam_admin.txt"))
+      split("\n", file("${path.module}/permissions/project_iam_admin.txt")),
+      split("\n", file("${path.module}/permissions/storage_object_user.txt")),
+      split("\n", file("${path.module}/permissions/service_account_user.txt")),
+      split("\n", file("${path.module}/permissions/service_account_token_creator.txt")),
+      split("\n", file("${path.module}/permissions/bq_data_owner.txt")),
     ),
-    [""]
+    ["", "resourcemanager.projects.list"]
   )
 }
