@@ -1,18 +1,19 @@
 terraform {
   required_providers {
     google = {
-      source = "hashicorp/google"
+      source  = "hashicorp/google"
       version = "6.8.0"
     }
   }
 
   backend "gcs" {
-    bucket  = format("%s-config", var.cama_prefix)
-    prefix  = "tf/state"
+    bucket = "weitzman-musa-geocloud-tfstate"
+    prefix = "tf/state-s25"
   }
 }
 
 provider "google" {
-  project = var.cama_prefix
-  region  = var.location
+  project                         = "weitzman-musa-geocloud"
+  region                          = "us-east4"
+  add_terraform_attribution_label = false
 }
