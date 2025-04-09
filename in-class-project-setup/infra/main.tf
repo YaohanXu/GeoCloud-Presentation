@@ -19,19 +19,19 @@ module "team_project" {
 import {
   for_each = local.project_names
   to = module.team_project[each.key].google_storage_bucket.raw_data
-  id = "${each.key}/musa5090s25-team5-raw_data"
+  id = "${each.key}/${each.key}-raw_data"
 }
 
 import {
   for_each = local.project_names
   to = module.team_project[each.key].google_storage_bucket.prepared_data
-  id = "${each.key}/musa5090s25-team5-prepared_data"
+  id = "${each.key}/${each.key}-prepared_data"
 }
 
 import {
   for_each = local.project_names
   to = module.team_project[each.key].google_storage_bucket.temp_data
-  id = "${each.key}/musa5090s25-team5-temp_data"
+  id = "${each.key}/${each.key}-temp_data"
 }
 
 import {
