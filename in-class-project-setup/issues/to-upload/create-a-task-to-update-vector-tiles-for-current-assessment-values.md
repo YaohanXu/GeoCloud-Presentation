@@ -4,6 +4,7 @@ labels: ["Scripting","Analysis","Front-end"]
 ---
 
 This can most easily be done with a [Cloud Run shell job](https://cloud.google.com/run/docs/quickstarts/jobs/build-create-shell) using `ogr2ogr`. In brief, there are three steps involved:
+
 1. Download the `property_tile_info.geojson` data file from the `musa5090s25-team<N>-temp_data` bucket
 2. Use `ogr2ogr` to convert the data into a folder of [Mapbox Vector Tile](https://github.com/mapbox/vector-tile-spec) (MVT) protobuf (.pbf) files.
 3. Upload the resulting folder into a Google Cloud Storage bucket. The easiest way to do this may be to use the `gcloud` CLI.
@@ -80,31 +81,35 @@ gcloud storage cp \
 
 ## Deploy the Cloud Run job
 
-In order to deploy a script to Cloud Run, you first have to build that script into a container. Use the following command to do so:
+In order to deploy a script to Cloud Run, use the following command:
 
 ```bash
-gcloud builds submit \
-  --region us-central1 \
-  --tag gcr.io/musa5090s24-team<N>/generate-property-map-tiles
-```
-
-This will tell Google Cloud Platform to start building your folder into a container according to the instructions in the `Dockerfile`. GCP will tag that container as `gcr.io/musa5090s24-team<N>/generate-property-map-tiles` (all containers built with GCP must start with `gcr.io` -- that's just a rule Google imposes). After the build is done (you'll see a bunch of output telling you what is going on at each step) you can use that container tag to deploy a Cloud Run job like so:
-
-```bash
-gcloud beta run jobs create generate-property-map-tiles \
-  --image gcr.io/musa5090s24-team<N>/generate-property-map-tiles \
-  --service-account data-pipeline-user@musa5090s24-team<N>.iam.gserviceaccount.com \
+gcloud run jobs \
+  deploy generate-property-map-tiles \
+  --project musa5090s25-team<N> \
+  --region us-east4 \
+  --source . \
   --cpu 4 \
-  --memory 2Gi \
-  --region us-central1
+  --memory 2Gi
 ```
+
+The first time you run this command, the `gcloud` tool will ask you a question like the following:
+
+```
+Deploying from source requires an Artifact Registry Docker repository to store built containers. A repository named [cloud-run-source-deploy] in region [us-east4] will be created.
+
+Do you want to continue (Y/n)?
+```
+
+This is because your Dockerfile needs to be built into an image file, and that image needs to be stored somewhere (in GCP, this place where images are built and stored is called an "Artifact Registry"). Go ahead and answer `Y`.
 
 ## Testing the job
 
 ```bash
-gcloud beta run jobs \
+gcloud run jobs \
   execute generate-property-map-tiles \
-  --region us-central1
+  --project musa5090s25-team<N> \
+  --region us-east4
 ```
 
 If it's working correctly, it will take a while (like 15 minutes), but will complete by copying a bunch of tile files to GCS.
