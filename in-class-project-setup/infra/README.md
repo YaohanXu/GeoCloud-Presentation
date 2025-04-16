@@ -37,4 +37,6 @@ gcloud iam roles describe roles/iam.serviceAccountUser --format json | jq -r '.i
 gcloud iam roles describe roles/iam.serviceAccountTokenCreator --format json | jq -r '.includedPermissions | join("\n")' > permissions/service_account_token_creator.txt
 
 gcloud iam roles describe roles/bigquery.dataOwner --format json | jq -r '.includedPermissions | join("\n")' > permissions/bq_data_owner.txt
+
+gcloud iam roles describe roles/run.admin --format json | jq -r '.includedPermissions | join("\n")' > permissions/run_admin.txt
 ```

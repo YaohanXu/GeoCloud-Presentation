@@ -61,8 +61,8 @@ resource "google_storage_bucket" "public" {
 
   cors {
     origin          = ["*"]
-    method          = ["GET", "HEAD", "OPTIONS"]
-    response_header = ["Content-Type"]
+    method          = ["GET", "POST", "PUT", "OPTIONS", "HEAD", "DELETE"]
+    response_header = ["*"]
   }
 }
 
@@ -170,6 +170,7 @@ resource "google_project_iam_custom_role" "team_member" {
       split("\n", file("${path.module}/../permissions/service_account_user.txt")),
       split("\n", file("${path.module}/../permissions/service_account_token_creator.txt")),
       split("\n", file("${path.module}/../permissions/bq_data_owner.txt")),
+      split("\n", file("${path.module}/../permissions/run_admin.txt")),
     ),
     ["", "resourcemanager.projects.list"]
   )
